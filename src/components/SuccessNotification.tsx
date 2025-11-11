@@ -15,7 +15,7 @@ const SuccessNotification = ({ show, message, onClose }: SuccessNotificationProp
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [show, onClose]);
+  }, [show]);
 
   if (!show) return null;
 
