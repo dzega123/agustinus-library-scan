@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Home, Users, UserCheck, FileText, BarChart3, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Users, UserCheck, FileText, BarChart3, Settings, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import MembersManager from "@/components/dashboard/MembersManager";
 import VisitorsManager from "@/components/dashboard/VisitorsManager";
@@ -12,6 +13,16 @@ const Dashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeMenu, setActiveMenu] = useState("home");
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAdminLoggedIn");
+    toast({
+      title: "Logout berhasil",
+      description: "Sampai jumpa kembali!",
+    });
+    navigate("/");
+  };
 
   const menuItems = [
     { id: "home", label: "Beranda", icon: Home },
@@ -82,15 +93,23 @@ const Dashboard = () => {
           })}
         </nav>
 
-        {/* Back to Home */}
-        <div className="p-4 border-t border-border">
+        {/* Back to Home & Logout */}
+        <div className="p-4 border-t border-border space-y-2">
           <Button
             variant="outline"
             onClick={() => navigate("/")}
             className={`w-full ${sidebarCollapsed ? "px-2" : ""}`}
           >
-            <Home className="w-4 h-4 mr-2" />
-            {!sidebarCollapsed && "Kembali ke Beranda"}
+            <Home className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Kembali ke Beranda</span>}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleLogout}
+            className={`w-full ${sidebarCollapsed ? "px-2" : ""}`}
+          >
+            <LogOut className="w-4 h-4" />
+            {!sidebarCollapsed && <span className="ml-2">Logout</span>}
           </Button>
         </div>
       </aside>

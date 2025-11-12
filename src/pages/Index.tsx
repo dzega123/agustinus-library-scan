@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import AnggotaTab from "@/components/AnggotaTab";
@@ -7,12 +10,12 @@ import NonAnggotaTab, { NonAnggotaData } from "@/components/NonAnggotaTab";
 import RombonganTab, { RombonganData } from "@/components/RombonganTab";
 import TodayVisitorsTab from "@/components/TodayVisitorsTab";
 import FloatingRegisterButton from "@/components/FloatingRegisterButton";
-import FloatingDashboardButton from "@/components/FloatingDashboardButton";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import SuccessNotification from "@/components/SuccessNotification";
 import { storageUtils } from "@/utils/localStorage";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
   const [visitors, setVisitors] = useState(() => storageUtils.getTodayCheckIns());
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -90,6 +93,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 pt-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Kembali ke Beranda
+        </Button>
+      </div>
       <Header currentDate={currentDate} visitorCount={visitors.length} />
       <WelcomeBanner visitorCount={visitors.length} />
 
@@ -121,7 +134,6 @@ const Index = () => {
       </div>
 
       <FloatingRegisterButton onClick={() => setShowRegisterModal(true)} />
-      <FloatingDashboardButton />
 
       <RegisterModal
         open={showRegisterModal}
