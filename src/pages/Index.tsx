@@ -7,6 +7,7 @@ import NonAnggotaTab, { NonAnggotaData } from "@/components/NonAnggotaTab";
 import RombonganTab, { RombonganData } from "@/components/RombonganTab";
 import TodayVisitorsTab from "@/components/TodayVisitorsTab";
 import FloatingRegisterButton from "@/components/FloatingRegisterButton";
+import FloatingDashboardButton from "@/components/FloatingDashboardButton";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import SuccessNotification from "@/components/SuccessNotification";
 import { storageUtils } from "@/utils/localStorage";
@@ -120,6 +121,7 @@ const Index = () => {
       </div>
 
       <FloatingRegisterButton onClick={() => setShowRegisterModal(true)} />
+      <FloatingDashboardButton />
 
       <RegisterModal
         open={showRegisterModal}
