@@ -5,10 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
 import { Download, Printer, Plus, Pencil, Trash2, Search } from "lucide-react";
+import RegisterModal, { RegisterData } from "@/components/RegisterModal";
+import { useToast } from "@/hooks/use-toast";
 
 const MembersManager = () => {
   const [members, setMembers] = useState(storageUtils.getMembers());
   const [searchQuery, setSearchQuery] = useState("");
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const { toast } = useToast();
 
   const filteredMembers = members.filter(
     (member) =>
@@ -16,18 +20,42 @@ const MembersManager = () => {
       member.idAnggota.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleRegister = (data: RegisterData) => {
+    const newMember = storageUtils.addMember(data);
+    setMembers(storageUtils.getMembers());
+    toast({
+      title: "Berhasil!",
+      description: "Anggota baru berhasil didaftarkan",
+    });
+  };
+
+  const handleDelete = (idAnggota: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus anggota ini?")) {
+      const updatedMembers = members.filter(m => m.idAnggota !== idAnggota);
+      localStorage.setItem("library_members", JSON.stringify(updatedMembers));
+      setMembers(updatedMembers);
+      toast({
+        title: "Berhasil!",
+        description: "Anggota berhasil dihapus",
+      });
+    }
+  };
+
   const handleExportExcel = () => {
-    // TODO: Implement Excel export
-    alert("Fitur ekspor Excel akan segera diimplementasikan");
+    toast({
+      title: "Info",
+      description: "Fitur ekspor Excel akan segera diimplementasikan",
+    });
   };
 
   const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    alert("Fitur ekspor PDF akan segera diimplementasikan");
+    toast({
+      title: "Info",
+      description: "Fitur ekspor PDF akan segera diimplementasikan",
+    });
   };
 
   const handlePrint = () => {
-    // TODO: Implement print
     window.print();
   };
 
@@ -45,7 +73,7 @@ const MembersManager = () => {
           <CardDescription>Tambah, ekspor, atau cetak data anggota</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button>
+          <Button onClick={() => setIsRegisterModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Tambah Anggota
           </Button>
@@ -108,11 +136,16 @@ const MembersManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" title="Edit">
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(member.idAnggota)}
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
                     </TableCell>
@@ -123,6 +156,12 @@ const MembersManager = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <RegisterModal
+        open={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onRegister={handleRegister}
+      />
     </div>
   );
 };
