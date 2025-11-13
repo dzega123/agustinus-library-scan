@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
 import { Download, Printer, Calendar } from "lucide-react";
+import { exportToExcel, exportVisitorsToPDF } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 const VisitorsManager = () => {
+  const { toast } = useToast();
   const [visitors] = useState(storageUtils.getCheckIns());
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -18,6 +21,36 @@ const VisitorsManager = () => {
     const end = endDate ? new Date(endDate) : new Date();
     return visitorDate >= start && visitorDate <= end;
   });
+
+  const handleExportExcel = () => {
+    const excelData = filteredVisitors.map(v => ({
+      'Nama': v.nama,
+      'Tipe': v.type,
+      'Tanggal': new Date(v.timestamp).toLocaleDateString('id-ID'),
+      'Waktu': new Date(v.timestamp).toLocaleTimeString('id-ID')
+    }));
+    exportToExcel(excelData, 'Data_Pengunjung');
+    toast({
+      title: "Berhasil!",
+      description: "Data pengunjung berhasil diekspor ke Excel",
+    });
+  };
+
+  const handleExportPDF = () => {
+    exportVisitorsToPDF(
+      filteredVisitors,
+      startDate ? new Date(startDate).toLocaleDateString('id-ID') : undefined,
+      endDate ? new Date(endDate).toLocaleDateString('id-ID') : undefined
+    );
+    toast({
+      title: "Berhasil!",
+      description: "Data pengunjung berhasil diekspor ke PDF",
+    });
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -62,15 +95,15 @@ const VisitorsManager = () => {
           <CardDescription>Ekspor atau cetak data pengunjung</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportExcel}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor Excel
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor PDF
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
             Cetak
           </Button>

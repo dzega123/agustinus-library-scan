@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import DashboardHome from "@/components/dashboard/DashboardHome";
 import MembersManager from "@/components/dashboard/MembersManager";
 import VisitorsManager from "@/components/dashboard/VisitorsManager";
+import ThesisAttendanceManager from "@/components/dashboard/ThesisAttendanceManager";
 import Statistics from "@/components/dashboard/Statistics";
 import SettingsPanel from "@/components/dashboard/SettingsPanel";
 
@@ -28,6 +29,7 @@ const Dashboard = () => {
     { id: "home", label: "Beranda", icon: Home },
     { id: "members", label: "Daftar Anggota", icon: Users },
     { id: "visitors", label: "Daftar Pengunjung", icon: UserCheck },
+    { id: "thesis", label: "Absensi Mahasiswa Akhir", icon: FileText },
     { id: "statistics", label: "Grafik & Statistik", icon: BarChart3 },
     { id: "settings", label: "Pengaturan", icon: Settings },
   ];
@@ -40,6 +42,8 @@ const Dashboard = () => {
         return <MembersManager />;
       case "visitors":
         return <VisitorsManager />;
+      case "thesis":
+        return <ThesisAttendanceManager />;
       case "statistics":
         return <Statistics />;
       case "settings":

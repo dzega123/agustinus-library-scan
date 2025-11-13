@@ -7,6 +7,7 @@ import { storageUtils } from "@/utils/localStorage";
 import { Download, Printer, Plus, Pencil, Trash2, Search } from "lucide-react";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import { useToast } from "@/hooks/use-toast";
+import { exportToExcel, exportMembersToPDF, printMembers } from "@/utils/exportUtils";
 
 const MembersManager = () => {
   const [members, setMembers] = useState(storageUtils.getMembers());
@@ -42,21 +43,30 @@ const MembersManager = () => {
   };
 
   const handleExportExcel = () => {
+    const excelData = filteredMembers.map(m => ({
+      'ID Anggota': m.idAnggota,
+      'Nama': m.nama,
+      'Tipe Keanggotaan': m.tipeKeanggotaan,
+      'Institusi': m.institusi,
+      'Tanggal Daftar': new Date(m.registeredAt).toLocaleDateString('id-ID')
+    }));
+    exportToExcel(excelData, 'Daftar_Anggota');
     toast({
-      title: "Info",
-      description: "Fitur ekspor Excel akan segera diimplementasikan",
+      title: "Berhasil!",
+      description: "Data anggota berhasil diekspor ke Excel",
     });
   };
 
   const handleExportPDF = () => {
+    exportMembersToPDF(filteredMembers);
     toast({
-      title: "Info",
-      description: "Fitur ekspor PDF akan segera diimplementasikan",
+      title: "Berhasil!",
+      description: "Data anggota berhasil diekspor ke PDF",
     });
   };
 
   const handlePrint = () => {
-    window.print();
+    printMembers(filteredMembers);
   };
 
   return (

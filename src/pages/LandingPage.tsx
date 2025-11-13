@@ -26,7 +26,7 @@ const LandingPage = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Button
             onClick={() => navigate("/buku-tamu")}
             size="lg"
@@ -34,6 +34,16 @@ const LandingPage = () => {
           >
             <BookOpen className="w-12 h-12" />
             <span>Buku Tamu</span>
+          </Button>
+
+          <Button
+            onClick={() => navigate("/absensi-mahasiswa")}
+            size="lg"
+            variant="outline"
+            className="h-32 flex flex-col gap-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
+          >
+            <BookOpen className="w-12 h-12" />
+            <span>Absensi Mahasiswa Akhir</span>
           </Button>
 
           <Button

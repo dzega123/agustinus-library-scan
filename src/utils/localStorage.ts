@@ -14,8 +14,17 @@ interface CheckInRecord {
   data?: any;
 }
 
+interface ThesisAttendance {
+  id: string;
+  studentId: string;
+  nama: string;
+  checkInTime: string;
+  checkOutTime?: string;
+}
+
 const MEMBERS_KEY = "library_members";
 const CHECKINS_KEY = "library_checkins";
+const THESIS_ATTENDANCE_KEY = "library_thesis_attendance";
 
 export const storageUtils = {
   // Member management
@@ -64,9 +73,50 @@ export const storageUtils = {
     return newCheckIn;
   },
 
+  // Thesis attendance management
+  getThesisAttendances: (): ThesisAttendance[] => {
+    const data = localStorage.getItem(THESIS_ATTENDANCE_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  getTodayThesisAttendances: (): ThesisAttendance[] => {
+    const attendances = storageUtils.getThesisAttendances();
+    const today = new Date().toDateString();
+    return attendances.filter((a) => new Date(a.checkInTime).toDateString() === today);
+  },
+
+  addThesisAttendance: (attendance: Omit<ThesisAttendance, "id">) => {
+    const attendances = storageUtils.getThesisAttendances();
+    const newAttendance: ThesisAttendance = {
+      ...attendance,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+    attendances.push(newAttendance);
+    localStorage.setItem(THESIS_ATTENDANCE_KEY, JSON.stringify(attendances));
+    return newAttendance;
+  },
+
+  updateThesisCheckOut: (studentId: string): boolean => {
+    const attendances = storageUtils.getThesisAttendances();
+    const today = new Date().toDateString();
+    const attendance = attendances.find(
+      (a) => a.studentId === studentId && 
+             new Date(a.checkInTime).toDateString() === today &&
+             !a.checkOutTime
+    );
+    
+    if (attendance) {
+      attendance.checkOutTime = new Date().toISOString();
+      localStorage.setItem(THESIS_ATTENDANCE_KEY, JSON.stringify(attendances));
+      return true;
+    }
+    return false;
+  },
+
   // Clear all data (for testing)
   clearAll: () => {
     localStorage.removeItem(MEMBERS_KEY);
     localStorage.removeItem(CHECKINS_KEY);
+    localStorage.removeItem(THESIS_ATTENDANCE_KEY);
   },
 };

@@ -93,16 +93,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 pt-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-2"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Beranda
-        </Button>
-      </div>
       <Header currentDate={currentDate} visitorCount={visitors.length} />
       <WelcomeBanner visitorCount={visitors.length} />
 
