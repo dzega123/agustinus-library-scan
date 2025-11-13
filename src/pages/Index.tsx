@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import WelcomeBanner from "@/components/WelcomeBanner";
+import Footer from "@/components/Footer";
 import AnggotaTab from "@/components/AnggotaTab";
 import NonAnggotaTab, { NonAnggotaData } from "@/components/NonAnggotaTab";
 import RombonganTab, { RombonganData } from "@/components/RombonganTab";
@@ -92,7 +93,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header currentDate={currentDate} visitorCount={visitors.length} />
       <WelcomeBanner visitorCount={visitors.length} />
 
@@ -136,6 +137,8 @@ const Index = () => {
         message={notification.message}
         onClose={() => setNotification({ show: false, message: "" })}
       />
+      
+      <Footer />
     </div>
   );
 };

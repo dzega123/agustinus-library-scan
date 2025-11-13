@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { storageUtils } from "@/utils/localStorage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,17 +43,27 @@ const ThesisAttendance = () => {
 
     const member = storageUtils.findMemberById(checkInId.trim());
     if (member) {
-      storageUtils.addThesisAttendance({
+      const result = storageUtils.addThesisAttendance({
         studentId: checkInId.trim(),
         nama: member.nama,
         checkInTime: new Date().toISOString(),
       });
-      setAttendances(storageUtils.getTodayThesisAttendances());
-      setCheckInId("");
-      toast({
-        title: "Berhasil!",
-        description: `Check-in berhasil untuk ${member.nama}`,
-      });
+      
+      if (result) {
+        setAttendances(storageUtils.getTodayThesisAttendances());
+        setCheckInId("");
+        toast({
+          title: "Berhasil!",
+          description: `Check-in berhasil untuk ${member.nama}`,
+        });
+      } else {
+        toast({
+          title: "Sudah Check-in",
+          description: `${member.nama} sudah melakukan check-in hari ini`,
+          variant: "destructive",
+        });
+        setCheckInId("");
+      }
     } else {
       toast({
         title: "Error",
@@ -89,7 +100,7 @@ const ThesisAttendance = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header currentDate={currentDate} visitorCount={attendances.length} />
       
       <div className="container mx-auto px-4 py-8">
@@ -205,6 +216,8 @@ const ThesisAttendance = () => {
           </Card>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };

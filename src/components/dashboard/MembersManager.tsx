@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Printer, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Download, Plus, Pencil, Trash2, Search } from "lucide-react";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import { useToast } from "@/hooks/use-toast";
-import { exportToExcel, exportMembersToPDF, printMembers } from "@/utils/exportUtils";
+import { exportToExcel, exportMembersToPDF } from "@/utils/exportUtils";
 
 const MembersManager = () => {
   const [members, setMembers] = useState(storageUtils.getMembers());
@@ -65,9 +65,6 @@ const MembersManager = () => {
     });
   };
 
-  const handlePrint = () => {
-    printMembers(filteredMembers);
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -94,10 +91,6 @@ const MembersManager = () => {
           <Button variant="outline" onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor PDF
-          </Button>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Cetak
           </Button>
         </CardContent>
       </Card>

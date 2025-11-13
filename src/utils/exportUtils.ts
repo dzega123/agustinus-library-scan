@@ -195,27 +195,51 @@ export const exportThesisAttendanceToPDF = (
   autoTable(doc, {
     startY: 40,
     head: [[
-      'No', 'Nama',
-      'Masuk', 'Keluar', 
-      'Masuk', 'Keluar',
-      'Masuk', 'Keluar',
-      'Masuk', 'Keluar',
-      'Masuk', 'Keluar',
-      'Total Jam'
+      { content: 'No', rowSpan: 2 },
+      { content: 'Nama', rowSpan: 2 },
+      { content: 'SENIN', colSpan: 2 },
+      { content: 'SELASA', colSpan: 2 },
+      { content: 'RABU', colSpan: 2 },
+      { content: 'KAMIS', colSpan: 2 },
+      { content: 'JUMAT', colSpan: 2 },
+      { content: 'Total Jam', rowSpan: 2 }
     ], [
-      '', '',
-      'SENIN', '',
-      'SELASA', '',
-      'RABU', '',
-      'KAMIS', '',
-      'JUMAT', '',
-      ''
+      'Masuk', 'Keluar',
+      'Masuk', 'Keluar',
+      'Masuk', 'Keluar',
+      'Masuk', 'Keluar',
+      'Masuk', 'Keluar'
     ]],
     body: tableData,
-    styles: { fontSize: 8 },
+    styles: { 
+      fontSize: 8,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      textColor: [0, 0, 0],
+      fillColor: [255, 255, 255]
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      halign: 'center',
+      fontStyle: 'bold'
+    },
     columnStyles: {
-      0: { cellWidth: 10 },
-      1: { cellWidth: 40 }
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 40, halign: 'left' },
+      2: { cellWidth: 15, halign: 'center' },
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 15, halign: 'center' },
+      5: { cellWidth: 15, halign: 'center' },
+      6: { cellWidth: 15, halign: 'center' },
+      7: { cellWidth: 15, halign: 'center' },
+      8: { cellWidth: 15, halign: 'center' },
+      9: { cellWidth: 15, halign: 'center' },
+      10: { cellWidth: 15, halign: 'center' },
+      11: { cellWidth: 15, halign: 'center' },
+      12: { cellWidth: 20, halign: 'center' }
     }
   });
   

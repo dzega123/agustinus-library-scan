@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { storageUtils } from "@/utils/localStorage";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -16,7 +17,11 @@ const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (username === "Admin" && password === "admin123") {
+    const settings = storageUtils.getSettings();
+    const validUsername = settings.adminUsername || "Admin";
+    const validPassword = settings.adminPassword || "admin123";
+    
+    if (username === validUsername && password === validPassword) {
       localStorage.setItem("isAdminLoggedIn", "true");
       toast({
         title: "Login berhasil",

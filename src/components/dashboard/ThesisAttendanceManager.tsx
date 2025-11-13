@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Printer, Calendar } from "lucide-react";
+import { Download, Calendar } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -67,9 +67,6 @@ const ThesisAttendanceManager = () => {
     });
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -128,10 +125,6 @@ const ThesisAttendanceManager = () => {
           <Button variant="outline" onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor PDF
-          </Button>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Cetak
           </Button>
         </CardContent>
       </Card>

@@ -25,6 +25,16 @@ interface ThesisAttendance {
 const MEMBERS_KEY = "library_members";
 const CHECKINS_KEY = "library_checkins";
 const THESIS_ATTENDANCE_KEY = "library_thesis_attendance";
+const SETTINGS_KEY = "library_settings";
+
+interface Settings {
+  libraryName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  adminUsername?: string;
+  adminPassword?: string;
+  footerText?: string;
+}
 
 export const storageUtils = {
   // Member management
@@ -87,6 +97,18 @@ export const storageUtils = {
 
   addThesisAttendance: (attendance: Omit<ThesisAttendance, "id">) => {
     const attendances = storageUtils.getThesisAttendances();
+    const today = new Date().toDateString();
+    
+    // Check if student already checked in today
+    const existingCheckIn = attendances.find(
+      (a) => a.studentId === attendance.studentId && 
+             new Date(a.checkInTime).toDateString() === today
+    );
+    
+    if (existingCheckIn) {
+      return null; // Already checked in
+    }
+    
     const newAttendance: ThesisAttendance = {
       ...attendance,
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -118,5 +140,22 @@ export const storageUtils = {
     localStorage.removeItem(MEMBERS_KEY);
     localStorage.removeItem(CHECKINS_KEY);
     localStorage.removeItem(THESIS_ATTENDANCE_KEY);
+  },
+
+  // Settings management
+  getSettings: (): Settings => {
+    const data = localStorage.getItem(SETTINGS_KEY);
+    return data ? JSON.parse(data) : {
+      adminUsername: "Admin",
+      adminPassword: "admin123",
+      footerText: "Powered by INLISLite Perpusnas"
+    };
+  },
+
+  updateSettings: (settings: Partial<Settings>) => {
+    const currentSettings = storageUtils.getSettings();
+    const newSettings = { ...currentSettings, ...settings };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+    return newSettings;
   },
 };
