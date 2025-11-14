@@ -54,8 +54,13 @@ const Index = () => {
         type: member.tipeKeanggotaan,
         data: member,
       });
-      setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`Selamat datang, ${member.nama}!`);
+      
+      if (checkIn) {
+        setVisitors(storageUtils.getTodayCheckIns());
+        showSuccess(`Selamat datang, ${member.nama}!`);
+      } else {
+        showSuccess("Anda sudah melakukan check-in hari ini.");
+      }
     } else {
       showSuccess("ID Anggota tidak ditemukan. Silakan daftar terlebih dahulu.");
     }
@@ -67,8 +72,13 @@ const Index = () => {
       type: "Non Anggota",
       data,
     });
-    setVisitors(storageUtils.getTodayCheckIns());
-    showSuccess(`Pendaftaran berhasil! Selamat datang, ${data.nama}!`);
+    
+    if (checkIn) {
+      setVisitors(storageUtils.getTodayCheckIns());
+      showSuccess(`Pendaftaran berhasil! Selamat datang, ${data.nama}!`);
+    } else {
+      showSuccess("Anda sudah melakukan check-in hari ini.");
+    }
   };
 
   const handleGroupRegister = (data: RombonganData) => {
@@ -77,8 +87,13 @@ const Index = () => {
       type: "Rombongan",
       data,
     });
-    setVisitors(storageUtils.getTodayCheckIns());
-    showSuccess(`Rombongan dari ${data.namaInstansi} berhasil terdaftar!`);
+    
+    if (checkIn) {
+      setVisitors(storageUtils.getTodayCheckIns());
+      showSuccess(`Rombongan dari ${data.namaInstansi} berhasil terdaftar!`);
+    } else {
+      showSuccess("Rombongan ini sudah melakukan check-in hari ini.");
+    }
   };
 
   const handleNewMemberRegister = (data: RegisterData) => {
@@ -88,8 +103,14 @@ const Index = () => {
       type: data.tipeKeanggotaan,
       data,
     });
-    setVisitors(storageUtils.getTodayCheckIns());
-    showSuccess(`Pendaftaran anggota berhasil! Selamat datang, ${data.nama}!`);
+    
+    if (checkIn) {
+      setVisitors(storageUtils.getTodayCheckIns());
+      showSuccess(`Pendaftaran anggota berhasil! Selamat datang, ${data.nama}!`);
+    } else {
+      setVisitors(storageUtils.getTodayCheckIns());
+      showSuccess(`Anggota berhasil didaftarkan, tetapi sudah check-in hari ini.`);
+    }
   };
 
   return (

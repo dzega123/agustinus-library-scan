@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Calendar } from "lucide-react";
+import { Download, Calendar, Trash2 } from "lucide-react";
 import { exportToExcel, exportVisitorsToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const VisitorsManager = () => {
   const { toast } = useToast();
-  const [visitors] = useState(storageUtils.getCheckIns());
+  const [visitors, setVisitors] = useState(storageUtils.getCheckIns());
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Refresh visitors data
+    setVisitors(storageUtils.getCheckIns());
+  }, []);
 
   const filteredVisitors = visitors.filter((visitor) => {
     if (!startDate && !endDate) return true;
@@ -45,6 +61,25 @@ const VisitorsManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data pengunjung berhasil diekspor ke PDF",
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    storageUtils.deleteCheckIn(id);
+    setVisitors(storageUtils.getCheckIns());
+    setDeleteId(null);
+    toast({
+      title: "Berhasil!",
+      description: "Data pengunjung berhasil dihapus",
+    });
+  };
+
+  const handleCleanupDuplicates = () => {
+    const removed = storageUtils.removeDuplicateCheckIns();
+    setVisitors(storageUtils.getCheckIns());
+    toast({
+      title: "Berhasil!",
+      description: `${removed} data duplikat berhasil dihapus`,
     });
   };
 
@@ -100,6 +135,10 @@ const VisitorsManager = () => {
             <Download className="w-4 h-4 mr-2" />
             Ekspor PDF
           </Button>
+          <Button variant="destructive" onClick={handleCleanupDuplicates}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Hapus Duplikat
+          </Button>
         </CardContent>
       </Card>
 
@@ -116,12 +155,13 @@ const VisitorsManager = () => {
                 <TableHead>Tipe Keanggotaan</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Waktu</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredVisitors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     Tidak ada data pengunjung
                   </TableCell>
                 </TableRow>
@@ -136,6 +176,15 @@ const VisitorsManager = () => {
                     <TableCell>
                       {new Date(visitor.timestamp).toLocaleTimeString("id-ID")}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteId(visitor.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -143,6 +192,23 @@ const VisitorsManager = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Data Pengunjung?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Data pengunjung akan dihapus secara permanen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteId && handleDelete(deleteId)}>
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

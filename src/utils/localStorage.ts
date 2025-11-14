@@ -73,6 +73,18 @@ export const storageUtils = {
 
   addCheckIn: (checkIn: Omit<CheckInRecord, "id" | "timestamp">) => {
     const checkIns = storageUtils.getCheckIns();
+    const today = new Date().toDateString();
+    
+    // Check for duplicate check-in today based on nama
+    const existingCheckIn = checkIns.find(
+      (c) => c.nama === checkIn.nama && 
+             new Date(c.timestamp).toDateString() === today
+    );
+    
+    if (existingCheckIn) {
+      return null; // Already checked in today
+    }
+    
     const newCheckIn: CheckInRecord = {
       ...checkIn,
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -81,6 +93,30 @@ export const storageUtils = {
     checkIns.push(newCheckIn);
     localStorage.setItem(CHECKINS_KEY, JSON.stringify(checkIns));
     return newCheckIn;
+  },
+
+  deleteCheckIn: (id: string) => {
+    const checkIns = storageUtils.getCheckIns();
+    const filteredCheckIns = checkIns.filter((c) => c.id !== id);
+    localStorage.setItem(CHECKINS_KEY, JSON.stringify(filteredCheckIns));
+  },
+
+  removeDuplicateCheckIns: () => {
+    const checkIns = storageUtils.getCheckIns();
+    const seen = new Map<string, CheckInRecord>();
+    
+    checkIns.forEach((checkIn) => {
+      const date = new Date(checkIn.timestamp).toDateString();
+      const key = `${checkIn.nama}_${date}`;
+      
+      if (!seen.has(key)) {
+        seen.set(key, checkIn);
+      }
+    });
+    
+    const uniqueCheckIns = Array.from(seen.values());
+    localStorage.setItem(CHECKINS_KEY, JSON.stringify(uniqueCheckIns));
+    return checkIns.length - uniqueCheckIns.length; // Return number of duplicates removed
   },
 
   // Thesis attendance management
@@ -133,6 +169,24 @@ export const storageUtils = {
       return true;
     }
     return false;
+  },
+
+  removeDuplicateThesisAttendances: () => {
+    const attendances = storageUtils.getThesisAttendances();
+    const seen = new Map<string, ThesisAttendance>();
+    
+    attendances.forEach((attendance) => {
+      const date = new Date(attendance.checkInTime).toDateString();
+      const key = `${attendance.studentId}_${date}`;
+      
+      if (!seen.has(key)) {
+        seen.set(key, attendance);
+      }
+    });
+    
+    const uniqueAttendances = Array.from(seen.values());
+    localStorage.setItem(THESIS_ATTENDANCE_KEY, JSON.stringify(uniqueAttendances));
+    return attendances.length - uniqueAttendances.length; // Return number of duplicates removed
   },
 
   // Clear all data (for testing)
