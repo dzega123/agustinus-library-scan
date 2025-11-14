@@ -113,7 +113,7 @@ const VisitorsManager = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nama</TableHead>
-                <TableHead>Tipe</TableHead>
+                <TableHead>Tipe Keanggotaan</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Waktu</TableHead>
               </TableRow>

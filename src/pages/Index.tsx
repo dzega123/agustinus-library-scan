@@ -51,7 +51,7 @@ const Index = () => {
     if (member) {
       const checkIn = storageUtils.addCheckIn({
         nama: member.nama,
-        type: "Anggota",
+        type: member.tipeKeanggotaan,
         data: member,
       });
       setVisitors(storageUtils.getTodayCheckIns());
@@ -85,7 +85,7 @@ const Index = () => {
     storageUtils.addMember(data);
     const checkIn = storageUtils.addCheckIn({
       nama: data.nama,
-      type: "Anggota Baru",
+      type: data.tipeKeanggotaan,
       data,
     });
     setVisitors(storageUtils.getTodayCheckIns());
