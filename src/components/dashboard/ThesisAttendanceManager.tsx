@@ -1,16 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Calendar } from "lucide-react";
+import { Download, Calendar, Trash2 } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendanceManager = () => {
   const { toast } = useToast();
-  const [attendances] = useState(storageUtils.getThesisAttendances());
+  const [attendances, setAttendances] = useState(storageUtils.getThesisAttendances());
+  
+  useEffect(() => {
+    // Refresh attendances data
+    setAttendances(storageUtils.getThesisAttendances());
+  }, []);
   
   // Get current week's Monday and Friday as default
   const getWeekRange = () => {
@@ -64,6 +69,15 @@ const ThesisAttendanceManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data absensi berhasil diekspor ke PDF",
+    });
+  };
+
+  const handleCleanupDuplicates = () => {
+    const removed = storageUtils.removeDuplicateThesisAttendances();
+    setAttendances(storageUtils.getThesisAttendances());
+    toast({
+      title: "Berhasil!",
+      description: `${removed} data duplikat berhasil dihapus`,
     });
   };
 
@@ -125,6 +139,10 @@ const ThesisAttendanceManager = () => {
           <Button variant="outline" onClick={handleExportPDF}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor PDF
+          </Button>
+          <Button variant="destructive" onClick={handleCleanupDuplicates}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Hapus Duplikat
           </Button>
         </CardContent>
       </Card>
