@@ -35,7 +35,7 @@ const TodayVisitorsTab = ({ visitors }: TodayVisitorsTabProps) => {
             <TableRow>
               <TableHead className="w-12">No</TableHead>
               <TableHead>Nama Pengunjung</TableHead>
-              <TableHead>Tipe</TableHead>
+              <TableHead>Tipe Keanggotaan</TableHead>
               <TableHead>Jam</TableHead>
               <TableHead>Tanggal</TableHead>
             </TableRow>
