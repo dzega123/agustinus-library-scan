@@ -14,23 +14,35 @@ export const exportMembersToPDF = (members: any[]) => {
   
   // Header
   doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
   doc.text('STT REFORMED INJILI INTERNASIONAL', 105, 15, { align: 'center' });
   doc.setFontSize(14);
   doc.text('PERPUSTAKAAN AGUSTINUS', 105, 22, { align: 'center' });
   doc.setFontSize(12);
   doc.text('Daftar Anggota Perpustakaan', 105, 29, { align: 'center' });
   
-  // Table
+  // Table with black colors only
   autoTable(doc, {
     startY: 35,
     head: [['ID Anggota', 'Nama', 'Tipe Keanggotaan', 'Institusi', 'Tanggal Daftar']],
     body: members.map(m => [
-      m.idAnggota,
+      m.idAnggota || m.member_id,
       m.nama,
-      m.tipeKeanggotaan,
-      m.institusi,
-      new Date(m.registeredAt).toLocaleDateString('id-ID')
+      m.tipeKeanggotaan || m.tipe_keanggotaan,
+      m.institusi || m.jurusan,
+      new Date(m.registeredAt || m.created_at).toLocaleDateString('id-ID')
     ]),
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5
+    },
+    bodyStyles: {
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5
+    }
   });
   
   doc.save('Daftar_Anggota.pdf');
@@ -41,6 +53,7 @@ export const exportVisitorsToPDF = (visitors: any[], startDate?: string, endDate
   
   // Header
   doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
   doc.text('STT REFORMED INJILI INTERNASIONAL', 105, 15, { align: 'center' });
   doc.setFontSize(14);
   doc.text('PERPUSTAKAAN AGUSTINUS', 105, 22, { align: 'center' });
@@ -52,16 +65,27 @@ export const exportVisitorsToPDF = (visitors: any[], startDate?: string, endDate
     doc.text(`Periode: ${startDate} s/d ${endDate}`, 105, 36, { align: 'center' });
   }
   
-  // Table
+  // Table with black colors only
   autoTable(doc, {
     startY: startDate && endDate ? 42 : 35,
     head: [['Nama', 'Tipe', 'Tanggal', 'Waktu']],
     body: visitors.map(v => [
       v.nama,
-      v.type,
-      new Date(v.timestamp).toLocaleDateString('id-ID'),
-      new Date(v.timestamp).toLocaleTimeString('id-ID')
+      v.type || v.tipe_keanggotaan,
+      new Date(v.timestamp || v.check_in_time).toLocaleDateString('id-ID'),
+      new Date(v.timestamp || v.check_in_time).toLocaleTimeString('id-ID')
     ]),
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5
+    },
+    bodyStyles: {
+      textColor: [0, 0, 0],
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5
+    }
   });
   
   doc.save('Data_Pengunjung.pdf');

@@ -28,7 +28,7 @@ const LandingPage = () => {
         {/* Action Buttons */}
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <Button
-            onClick={() => navigate("/buku-tamu")}
+            onClick={() => window.open("/buku-tamu", "_blank")}
             size="lg"
             className="h-32 flex flex-col gap-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
@@ -37,7 +37,7 @@ const LandingPage = () => {
           </Button>
 
           <Button
-            onClick={() => navigate("/absensi-mahasiswa")}
+            onClick={() => window.open("/absensi-mahasiswa", "_blank")}
             size="lg"
             variant="outline"
             className="h-32 flex flex-col gap-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
@@ -47,7 +47,7 @@ const LandingPage = () => {
           </Button>
 
           <Button
-            onClick={() => navigate("/login")}
+            onClick={() => window.open("/login", "_blank")}
             variant="secondary"
             size="lg"
             className="h-32 flex flex-col gap-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
