@@ -14,7 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      check_ins: {
+        Row: {
+          alamat: string | null
+          check_in_time: string | null
+          created_at: string | null
+          date: string | null
+          id: string
+          jurusan: string | null
+          member_id: string | null
+          nama: string
+          no_telepon: string | null
+          tipe_keanggotaan: string | null
+          type: string
+        }
+        Insert: {
+          alamat?: string | null
+          check_in_time?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          jurusan?: string | null
+          member_id?: string | null
+          nama: string
+          no_telepon?: string | null
+          tipe_keanggotaan?: string | null
+          type: string
+        }
+        Update: {
+          alamat?: string | null
+          check_in_time?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          jurusan?: string | null
+          member_id?: string | null
+          nama?: string
+          no_telepon?: string | null
+          tipe_keanggotaan?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          alamat: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          jurusan: string | null
+          member_id: string
+          nama: string
+          no_telepon: string | null
+          tipe_keanggotaan: string
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          jurusan?: string | null
+          member_id: string
+          nama: string
+          no_telepon?: string | null
+          tipe_keanggotaan: string
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          jurusan?: string | null
+          member_id?: string
+          nama?: string
+          no_telepon?: string | null
+          tipe_keanggotaan?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          admin_password: string | null
+          admin_username: string | null
+          footer_height: number | null
+          footer_image_url: string | null
+          footer_text: string | null
+          header_height: number | null
+          header_image_url: string | null
+          id: string
+          library_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_password?: string | null
+          admin_username?: string | null
+          footer_height?: number | null
+          footer_image_url?: string | null
+          footer_text?: string | null
+          header_height?: number | null
+          header_image_url?: string | null
+          id?: string
+          library_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_password?: string | null
+          admin_username?: string | null
+          footer_height?: number | null
+          footer_image_url?: string | null
+          footer_text?: string | null
+          header_height?: number | null
+          header_image_url?: string | null
+          id?: string
+          library_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      thesis_attendance: {
+        Row: {
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string | null
+          date: string | null
+          id: string
+          student_id: string
+          student_name: string
+        }
+        Insert: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          student_id: string
+          student_name: string
+        }
+        Update: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          student_id?: string
+          student_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
