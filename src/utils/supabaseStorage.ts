@@ -15,14 +15,17 @@ export interface Member {
 export interface CheckInData {
   id?: string;
   member_id?: string;
+  memberId?: string;
   nama: string;
   type: string;
   tipe_keanggotaan?: string;
+  tipeKeanggotaan?: string;
   jurusan?: string;
   no_telepon?: string;
+  noTelepon?: string;
   alamat?: string;
-  check_in_time: string;
-  date: string;
+  check_in_time?: string;
+  date?: string;
 }
 
 export interface ThesisAttendance {
@@ -109,21 +112,35 @@ export const getTodayCheckIns = async (): Promise<CheckInData[]> => {
   return data || [];
 };
 
-export const addCheckIn = async (checkIn: CheckInData): Promise<CheckInData | null> => {
+export const addCheckIn = async (checkIn: Partial<CheckInData>): Promise<CheckInData | null> => {
   // Check for duplicate on same day
   const today = new Date().toISOString().split('T')[0];
+  const memberId = checkIn.member_id || checkIn.memberId;
+  
   const { data: existing } = await supabase
     .from('check_ins')
     .select('*')
-    .eq('nama', checkIn.nama)
+    .eq('member_id', memberId)
     .eq('date', today)
     .maybeSingle();
   
   if (existing) return null;
 
+  const insertData = {
+    member_id: memberId,
+    nama: checkIn.nama!,
+    type: checkIn.type!,
+    tipe_keanggotaan: checkIn.tipe_keanggotaan || checkIn.tipeKeanggotaan,
+    jurusan: checkIn.jurusan || '',
+    no_telepon: checkIn.no_telepon || checkIn.noTelepon || '',
+    alamat: checkIn.alamat || '',
+    check_in_time: new Date().toISOString(),
+    date: today
+  };
+
   const { data, error } = await supabase
     .from('check_ins')
-    .insert([checkIn])
+    .insert([insertData])
     .select()
     .single();
   
@@ -138,6 +155,102 @@ export const deleteCheckIn = async (id: string): Promise<void> => {
     .eq('id', id);
   
   if (error) throw error;
+};
+
+export const getTodayThesisAttendances = async (): Promise<ThesisAttendance[]> => {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('thesis_attendance')
+    .select('*')
+    .eq('date', today)
+    .order('check_in_time', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+};
+
+export const addThesisAttendance = async (attendance: { studentId: string; nama: string; checkInTime: string }): Promise<ThesisAttendance | null> => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Check if already exists
+  const { data: existing } = await supabase
+    .from('thesis_attendance')
+    .select('*')
+    .eq('student_id', attendance.studentId)
+    .eq('date', today)
+    .maybeSingle();
+  
+  if (existing) return null;
+
+  const { data, error } = await supabase
+    .from('thesis_attendance')
+    .insert([{
+      student_id: attendance.studentId,
+      student_name: attendance.nama,
+      check_in_time: attendance.checkInTime,
+      date: today
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateThesisCheckOut = async (studentId: string): Promise<boolean> => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data: existing } = await supabase
+    .from('thesis_attendance')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('date', today)
+    .maybeSingle();
+  
+  if (!existing || existing.check_out_time) return false;
+
+  const { error } = await supabase
+    .from('thesis_attendance')
+    .update({ check_out_time: new Date().toISOString() })
+    .eq('id', existing.id);
+  
+  if (error) throw error;
+  return true;
+};
+
+export const findMemberById = async (memberId: string): Promise<Member | null> => {
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('member_id', memberId)
+    .maybeSingle();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Helper to check if visitor already checked in today
+export const checkVisitorToday = async (memberId: string): Promise<boolean> => {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('check_ins')
+    .select('id')
+    .eq('member_id', memberId)
+    .eq('date', today)
+    .maybeSingle();
+  return !!data;
+};
+
+// Helper to check if thesis student already checked in today
+export const checkThesisAttendanceToday = async (studentId: string): Promise<boolean> => {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('thesis_attendance')
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('date', today)
+    .maybeSingle();
+  return !!data;
 };
 
 // Thesis attendance operations

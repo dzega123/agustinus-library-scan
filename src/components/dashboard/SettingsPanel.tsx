@@ -3,45 +3,61 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Image, Lock } from "lucide-react";
-import { storageUtils } from "@/utils/localStorage";
+import { Settings, Image, Lock, FileText } from "lucide-react";
+import * as supabaseStorage from "@/utils/supabaseStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsPanel = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState(storageUtils.getSettings());
-  const [libraryName, setLibraryName] = useState(settings.libraryName || "Perpustakaan Agustinus");
-  const [footerText, setFooterText] = useState(settings.footerText || "Powered by INLISLite Perpusnas");
-  const [username, setUsername] = useState(settings.adminUsername || "Admin");
+  const [settings, setSettings] = useState<any>({});
+  const [libraryName, setLibraryName] = useState("");
+  const [footerText, setFooterText] = useState("");
+  const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
+  const [footerImageFile, setFooterImageFile] = useState<File | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(100);
+  const [footerHeight, setFooterHeight] = useState(80);
 
-  const handleLibrarySettingsSave = () => {
-    if (logoFile) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        storageUtils.updateSettings({
-          libraryName,
-          logoUrl: e.target?.result as string,
-        });
-        toast({
-          title: "Berhasil!",
-          description: "Pengaturan perpustakaan berhasil disimpan",
-        });
-      };
-      reader.readAsDataURL(logoFile);
-    } else {
-      storageUtils.updateSettings({ libraryName });
-      toast({
-        title: "Berhasil!",
-        description: "Pengaturan perpustakaan berhasil disimpan",
-      });
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    const data = await supabaseStorage.getSettings();
+    if (data) {
+      setSettings(data);
+      setLibraryName(data.library_name || "Perpustakaan Agustinus");
+      setFooterText(data.footer_text || "Powered by INLISLite Perpusnas");
+      setUsername(data.admin_username || "Admin");
+      setHeaderHeight(data.header_height || 100);
+      setFooterHeight(data.footer_height || 80);
     }
   };
 
-  const handleFaviconSave = () => {
+  const handleLibrarySettingsSave = async () => {
+    let logoUrl = settings.header_image_url;
+    
+    if (logoFile) {
+      logoUrl = await supabaseStorage.uploadImage(logoFile, 'header-logo');
+    }
+
+    await supabaseStorage.updateSettings({
+      library_name: libraryName,
+      header_image_url: logoUrl,
+    });
+    
+    await loadSettings();
+    toast({
+      title: "Berhasil!",
+      description: "Pengaturan perpustakaan berhasil disimpan",
+    });
+  };
+
+  const handleFaviconSave = async () => {
     if (!faviconFile) {
       toast({
         title: "Error",
@@ -51,29 +67,24 @@ const SettingsPanel = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const faviconUrl = e.target?.result as string;
-      storageUtils.updateSettings({ faviconUrl });
-      
-      // Update the favicon in the document
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = faviconUrl;
-      
-      toast({
-        title: "Berhasil!",
-        description: "Favicon berhasil diperbarui",
-      });
-    };
-    reader.readAsDataURL(faviconFile);
+    const faviconUrl = await supabaseStorage.uploadImage(faviconFile, 'favicon');
+    
+    // Update the favicon in the document
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = faviconUrl;
+    
+    toast({
+      title: "Berhasil!",
+      description: "Favicon berhasil diperbarui",
+    });
   };
 
-  const handleSecurityUpdate = () => {
+  const handleSecurityUpdate = async () => {
     if (newPassword && newPassword !== confirmPassword) {
       toast({
         title: "Error",
@@ -83,17 +94,13 @@ const SettingsPanel = () => {
       return;
     }
 
-    const updates: any = { adminUsername: username };
+    const updates: any = { admin_username: username };
     if (newPassword) {
-      updates.adminPassword = newPassword;
+      updates.admin_password = newPassword;
     }
 
-    storageUtils.updateSettings(updates);
-    
-    // Update localStorage admin credentials
-    if (newPassword) {
-      localStorage.setItem("library_admin_password", newPassword);
-    }
+    await supabaseStorage.updateSettings(updates);
+    await loadSettings();
     
     toast({
       title: "Berhasil!",
@@ -104,13 +111,38 @@ const SettingsPanel = () => {
     setConfirmPassword("");
   };
 
-  const handleFooterSave = () => {
-    storageUtils.updateSettings({ footerText });
-    localStorage.setItem("library_footer_text", footerText);
+  const handleFooterSave = async () => {
+    await supabaseStorage.updateSettings({ footer_text: footerText });
+    await loadSettings();
     
     toast({
       title: "Berhasil!",
       description: "Footer berhasil diperbarui",
+    });
+  };
+
+  const handlePdfImagesUpload = async () => {
+    let headerUrl = settings.header_image_url;
+    let footerUrl = settings.footer_image_url;
+
+    if (headerImageFile) {
+      headerUrl = await supabaseStorage.uploadImage(headerImageFile, 'pdf-header');
+    }
+    if (footerImageFile) {
+      footerUrl = await supabaseStorage.uploadImage(footerImageFile, 'pdf-footer');
+    }
+
+    await supabaseStorage.updateSettings({
+      header_image_url: headerUrl,
+      footer_image_url: footerUrl,
+      header_height: headerHeight,
+      footer_height: footerHeight,
+    });
+
+    await loadSettings();
+    toast({
+      title: "Berhasil!",
+      description: "Pengaturan gambar PDF berhasil disimpan",
     });
   };
 
@@ -230,8 +262,80 @@ const SettingsPanel = () => {
           <Button onClick={handleFooterSave}>Simpan Footer</Button>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Header & Footer PDF Absensi Mahasiswa
+          </CardTitle>
+          <CardDescription>
+            Upload gambar header dan footer untuk ekspor PDF absensi mahasiswa akhir
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="pdf-header-image">Gambar Header</Label>
+            <Input
+              id="pdf-header-image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setHeaderImageFile(e.target.files?.[0] || null)}
+            />
+            {settings.header_image_url && (
+              <p className="text-sm text-muted-foreground">
+                Header saat ini: Sudah diupload
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="header-height">Tinggi Header (px)</Label>
+            <Input
+              id="header-height"
+              type="number"
+              value={headerHeight}
+              onChange={(e) => setHeaderHeight(Number(e.target.value))}
+              min="50"
+              max="200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pdf-footer-image">Gambar Footer</Label>
+            <Input
+              id="pdf-footer-image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFooterImageFile(e.target.files?.[0] || null)}
+            />
+            {settings.footer_image_url && (
+              <p className="text-sm text-muted-foreground">
+                Footer saat ini: Sudah diupload
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="footer-height">Tinggi Footer (px)</Label>
+            <Input
+              id="footer-height"
+              type="number"
+              value={footerHeight}
+              onChange={(e) => setFooterHeight(Number(e.target.value))}
+              min="50"
+              max="200"
+            />
+          </div>
+
+          <Button onClick={handlePdfImagesUpload}>
+            Simpan Pengaturan PDF
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 export default SettingsPanel;
+

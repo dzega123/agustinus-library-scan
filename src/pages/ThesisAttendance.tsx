@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RefreshCw } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { storageUtils } from "@/utils/localStorage";
+import * as supabaseStorage from "@/utils/supabaseStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendance = () => {
@@ -14,8 +14,17 @@ const ThesisAttendance = () => {
   const [checkInId, setCheckInId] = useState("");
   const [checkOutId, setCheckOutId] = useState("");
   const [showData, setShowData] = useState(false);
-  const [attendances, setAttendances] = useState(() => storageUtils.getTodayThesisAttendances());
+  const [attendances, setAttendances] = useState<any[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadAttendances();
+  }, []);
+
+  const loadAttendances = async () => {
+    const data = await supabaseStorage.getTodayThesisAttendances();
+    setAttendances(data);
+  };
 
   useEffect(() => {
     const updateDate = () => {
@@ -37,32 +46,52 @@ const ThesisAttendance = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCheckIn = (e: React.FormEvent) => {
+  const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkInId.trim()) return;
 
-    const member = storageUtils.findMemberById(checkInId.trim());
+    const member = await supabaseStorage.findMemberById(checkInId.trim());
     if (member) {
-      const result = storageUtils.addThesisAttendance({
-        studentId: checkInId.trim(),
-        nama: member.nama,
-        checkInTime: new Date().toISOString(),
-      });
-      
-      if (result) {
-        setAttendances(storageUtils.getTodayThesisAttendances());
-        setCheckInId("");
-        toast({
-          title: "Berhasil!",
-          description: `Check-in berhasil untuk ${member.nama}`,
-        });
-      } else {
+      // Check if already checked in today for thesis attendance
+      const existingThesis = await supabaseStorage.checkThesisAttendanceToday(checkInId.trim());
+      if (existingThesis) {
         toast({
           title: "Sudah Check-in",
           description: `${member.nama} sudah melakukan check-in hari ini`,
           variant: "destructive",
         });
         setCheckInId("");
+        return;
+      }
+
+      // Add to thesis_attendance
+      const thesisResult = await supabaseStorage.addThesisAttendance({
+        studentId: checkInId.trim(),
+        nama: member.nama,
+        checkInTime: new Date().toISOString(),
+      });
+      
+      // Also add to check_ins (buku tamu) if not already checked in today
+      const existingCheckIn = await supabaseStorage.checkVisitorToday(member.member_id);
+      if (!existingCheckIn) {
+        await supabaseStorage.addCheckIn({
+          memberId: member.member_id,
+          nama: member.nama,
+          tipeKeanggotaan: member.tipe_keanggotaan,
+          jurusan: member.jurusan || '',
+          noTelepon: member.no_telepon || '',
+          alamat: member.alamat || '',
+          type: 'Mahasiswa Akhir',
+        });
+      }
+      
+      if (thesisResult) {
+        await loadAttendances();
+        setCheckInId("");
+        toast({
+          title: "Berhasil!",
+          description: `Check-in berhasil untuk ${member.nama}`,
+        });
       }
     } else {
       toast({
@@ -73,13 +102,13 @@ const ThesisAttendance = () => {
     }
   };
 
-  const handleCheckOut = (e: React.FormEvent) => {
+  const handleCheckOut = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkOutId.trim()) return;
 
-    const success = storageUtils.updateThesisCheckOut(checkOutId.trim());
+    const success = await supabaseStorage.updateThesisCheckOut(checkOutId.trim());
     if (success) {
-      setAttendances(storageUtils.getTodayThesisAttendances());
+      await loadAttendances();
       setCheckOutId("");
       toast({
         title: "Berhasil!",
@@ -94,8 +123,8 @@ const ThesisAttendance = () => {
     }
   };
 
-  const handleRefresh = () => {
-    setAttendances(storageUtils.getTodayThesisAttendances());
+  const handleRefresh = async () => {
+    await loadAttendances();
     setShowData(!showData);
   };
 

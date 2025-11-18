@@ -153,26 +153,53 @@ export const printMembers = (members: any[]) => {
 export const exportThesisAttendanceToPDF = (
   attendances: any[],
   startDate: string,
-  endDate: string
+  endDate: string,
+  headerImageUrl?: string,
+  footerImageUrl?: string,
+  headerHeight: number = 100,
+  footerHeight: number = 80
 ) => {
   const doc = new jsPDF('landscape');
   
+  let startY = 15;
+  
+  // Add header image if provided
+  if (headerImageUrl) {
+    try {
+      doc.addImage(headerImageUrl, 'PNG', 10, startY, 277, headerHeight * 0.75);
+      startY += headerHeight * 0.75 + 5;
+    } catch (error) {
+      console.error('Error adding header image:', error);
+    }
+  }
+  
   // Header
   doc.setFontSize(14);
-  doc.text('Laporan Kunjungan Mahasiswa Skripsi dan Tesis', 148, 15, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('Laporan Kunjungan Mahasiswa Skripsi dan Tesis', 148, startY, { align: 'center' });
+  startY += 7;
   doc.setFontSize(12);
-  doc.text('Perpustakaan Agustinus', 148, 22, { align: 'center' });
+  doc.text('Perpustakaan Agustinus', 148, startY, { align: 'center' });
+  startY += 6;
   doc.setFontSize(10);
-  doc.text('Semester Genap Tahun Ajaran 2024/2025', 148, 28, { align: 'center' });
-  doc.text(`Tanggal ${startDate} - ${endDate}`, 148, 34, { align: 'center' });
+  doc.text('Semester Genap Tahun Ajaran 2024/2025', 148, startY, { align: 'center' });
+  startY += 6;
+  doc.text(`Tanggal ${startDate} - ${endDate}`, 148, startY, { align: 'center' });
+  startY += 8;
+  
   
   // Prepare data by student and day
   const studentData = new Map();
   
   attendances.forEach(att => {
-    if (!studentData.has(att.studentId)) {
-      studentData.set(att.studentId, {
-        nama: att.nama,
+    const studentId = att.student_id || att.studentId;
+    const studentName = att.student_name || att.nama;
+    const checkInTime = att.check_in_time || att.checkInTime;
+    const checkOutTime = att.check_out_time || att.checkOutTime;
+    
+    if (!studentData.has(studentId)) {
+      studentData.set(studentId, {
+        nama: studentName,
         senin: { masuk: '', keluar: '' },
         selasa: { masuk: '', keluar: '' },
         rabu: { masuk: '', keluar: '' },
@@ -182,27 +209,28 @@ export const exportThesisAttendanceToPDF = (
       });
     }
     
-    const student = studentData.get(att.studentId);
-    const date = new Date(att.checkInTime);
+    const student = studentData.get(studentId);
+    const date = new Date(checkInTime);
     const dayName = date.toLocaleDateString('id-ID', { weekday: 'long' }).toLowerCase();
     
-    if (att.checkInTime) {
-      student[dayName].masuk = new Date(att.checkInTime).toLocaleTimeString('id-ID', { 
+    if (checkInTime) {
+      student[dayName].masuk = new Date(checkInTime).toLocaleTimeString('id-ID', { 
         hour: '2-digit', 
         minute: '2-digit' 
       });
     }
-    if (att.checkOutTime) {
-      student[dayName].keluar = new Date(att.checkOutTime).toLocaleTimeString('id-ID', { 
+    if (checkOutTime) {
+      student[dayName].keluar = new Date(checkOutTime).toLocaleTimeString('id-ID', { 
         hour: '2-digit', 
         minute: '2-digit' 
       });
       
       // Calculate hours
-      const hours = (new Date(att.checkOutTime).getTime() - new Date(att.checkInTime).getTime()) / (1000 * 60 * 60);
+      const hours = (new Date(checkOutTime).getTime() - new Date(checkInTime).getTime()) / (1000 * 60 * 60);
       student.totalJam += hours;
     }
   });
+  
   
   // Table
   const tableData = Array.from(studentData.values()).map((s, idx) => [
@@ -216,8 +244,11 @@ export const exportThesisAttendanceToPDF = (
     s.totalJam.toFixed(2)
   ]);
   
+  const pageHeight = doc.internal.pageSize.height;
+  const footerSpace = footerImageUrl ? footerHeight * 0.75 + 10 : 10;
+  
   autoTable(doc, {
-    startY: 40,
+    startY: startY,
     head: [[
       { content: 'No', rowSpan: 2 },
       { content: 'Nama', rowSpan: 2 },
@@ -264,6 +295,18 @@ export const exportThesisAttendanceToPDF = (
       10: { cellWidth: 15, halign: 'center' },
       11: { cellWidth: 15, halign: 'center' },
       12: { cellWidth: 20, halign: 'center' }
+    },
+    margin: { bottom: footerSpace },
+    didDrawPage: (data) => {
+      // Add footer image on each page if provided
+      if (footerImageUrl) {
+        const footerY = pageHeight - footerHeight * 0.75 - 5;
+        try {
+          doc.addImage(footerImageUrl, 'PNG', 10, footerY, 277, footerHeight * 0.75);
+        } catch (error) {
+          console.error('Error adding footer image:', error);
+        }
+      }
     }
   });
   
