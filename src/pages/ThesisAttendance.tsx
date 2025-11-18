@@ -106,13 +106,24 @@ const ThesisAttendance = () => {
     e.preventDefault();
     if (!checkOutId.trim()) return;
 
+    // Verify member exists in members list
+    const member = await supabaseStorage.findMemberById(checkOutId.trim());
+    if (!member) {
+      toast({
+        title: "Error",
+        description: "ID tidak ditemukan di daftar anggota",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const success = await supabaseStorage.updateThesisCheckOut(checkOutId.trim());
     if (success) {
       await loadAttendances();
       setCheckOutId("");
       toast({
         title: "Berhasil!",
-        description: "Check-out berhasil",
+        description: `Check-out berhasil untuk ${member.nama}`,
       });
     } else {
       toast({
