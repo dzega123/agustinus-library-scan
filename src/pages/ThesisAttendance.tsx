@@ -229,18 +229,20 @@ const ThesisAttendance = () => {
                     attendances.map((att, idx) => (
                       <TableRow key={att.id}>
                         <TableCell>{idx + 1}</TableCell>
-                        <TableCell>{att.studentId}</TableCell>
-                        <TableCell>{att.nama}</TableCell>
+                        <TableCell>{att.student_id}</TableCell>
+                        <TableCell>{att.student_name}</TableCell>
                         <TableCell>
-                          {new Date(att.checkInTime).toLocaleTimeString('id-ID', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
-                          })}
+                          {att.check_in_time
+                            ? new Date(att.check_in_time).toLocaleTimeString('id-ID', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })
+                            : '-'}
                         </TableCell>
                         <TableCell>
-                          {att.checkOutTime
-                            ? new Date(att.checkOutTime).toLocaleTimeString('id-ID', {
+                          {att.check_out_time
+                            ? new Date(att.check_out_time).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'
