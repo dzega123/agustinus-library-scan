@@ -3,19 +3,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { storageUtils } from "@/utils/localStorage";
+import * as supabaseStorage from "@/utils/supabaseStorage";
 import { Download, Calendar, Trash2 } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendanceManager = () => {
   const { toast } = useToast();
-  const [attendances, setAttendances] = useState(storageUtils.getThesisAttendances());
+  const [attendances, setAttendances] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>({});
   
   useEffect(() => {
-    // Refresh attendances data
-    setAttendances(storageUtils.getThesisAttendances());
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    const data = await supabaseStorage.getThesisAttendances();
+    const settingsData = await supabaseStorage.getSettings();
+    setAttendances(data);
+    setSettings(settingsData);
+  };
   
   // Get current week's Monday and Friday as default
   const getWeekRange = () => {
@@ -36,22 +43,22 @@ const ThesisAttendanceManager = () => {
   const [startDate, setStartDate] = useState(weekRange.monday);
   const [endDate, setEndDate] = useState(weekRange.friday);
 
-  const filteredAttendances = attendances.filter((att) => {
+  const filteredAttendances = attendances.filter(att => {
     if (!startDate && !endDate) return true;
-    const attDate = new Date(att.checkInTime);
-    const start = startDate ? new Date(startDate) : new Date(0);
-    const end = endDate ? new Date(endDate) : new Date();
-    end.setHours(23, 59, 59, 999); // Include the entire end date
-    return attDate >= start && attDate <= end;
+    const date = att.date || att.check_in_time?.split('T')[0];
+    if (!date) return false;
+    if (startDate && date < startDate) return false;
+    if (endDate && date > endDate) return false;
+    return true;
   });
 
   const handleExportExcel = () => {
     const excelData = filteredAttendances.map(att => ({
-      'ID': att.studentId,
-      'Nama': att.nama,
-      'Tanggal': new Date(att.checkInTime).toLocaleDateString('id-ID'),
-      'Check-in': new Date(att.checkInTime).toLocaleTimeString('id-ID'),
-      'Check-out': att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('id-ID') : '-'
+      'ID': att.student_id,
+      'Nama': att.student_name,
+      'Tanggal': new Date(att.check_in_time || att.date).toLocaleDateString('id-ID'),
+      'Check-in': att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('id-ID') : '-',
+      'Check-out': att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID') : '-'
     }));
     exportToExcel(excelData, 'Absensi_Mahasiswa_Skripsi_Tesis');
     toast({
@@ -64,7 +71,11 @@ const ThesisAttendanceManager = () => {
     exportThesisAttendanceToPDF(
       filteredAttendances,
       startDate ? new Date(startDate).toLocaleDateString('id-ID') : '',
-      endDate ? new Date(endDate).toLocaleDateString('id-ID') : ''
+      endDate ? new Date(endDate).toLocaleDateString('id-ID') : '',
+      settings.header_image_url,
+      settings.footer_image_url,
+      settings.header_height || 100,
+      settings.footer_height || 80
     );
     toast({
       title: "Berhasil!",
@@ -72,12 +83,11 @@ const ThesisAttendanceManager = () => {
     });
   };
 
-  const handleCleanupDuplicates = () => {
-    const removed = storageUtils.removeDuplicateThesisAttendances();
-    setAttendances(storageUtils.getThesisAttendances());
+  const handleCleanupDuplicates = async () => {
+    // Remove duplicates logic can be implemented if needed
     toast({
-      title: "Berhasil!",
-      description: `${removed} data duplikat berhasil dihapus`,
+      title: "Info",
+      description: "Fitur cleanup duplikat akan segera diimplementasikan",
     });
   };
 
@@ -175,17 +185,21 @@ const ThesisAttendanceManager = () => {
                 filteredAttendances.map((att, idx) => (
                   <TableRow key={att.id}>
                     <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{att.studentId}</TableCell>
-                    <TableCell>{att.nama}</TableCell>
+                    <TableCell>{att.student_id}</TableCell>
+                    <TableCell>{att.student_name}</TableCell>
                     <TableCell>
-                      {new Date(att.checkInTime).toLocaleDateString('id-ID')}
+                      {att.check_in_time 
+                        ? new Date(att.check_in_time).toLocaleDateString('id-ID')
+                        : '-'}
                     </TableCell>
                     <TableCell>
-                      {new Date(att.checkInTime).toLocaleTimeString('id-ID')}
+                      {att.check_in_time
+                        ? new Date(att.check_in_time).toLocaleTimeString('id-ID')
+                        : '-'}
                     </TableCell>
                     <TableCell>
-                      {att.checkOutTime
-                        ? new Date(att.checkOutTime).toLocaleTimeString('id-ID')
+                      {att.check_out_time
+                        ? new Date(att.check_out_time).toLocaleTimeString('id-ID')
                         : '-'}
                     </TableCell>
                   </TableRow>
