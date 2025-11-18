@@ -136,7 +136,7 @@ const ThesisAttendance = () => {
 
   const handleRefresh = async () => {
     await loadAttendances();
-    setShowData(!showData);
+    setShowData(true);
   };
 
   return (
