@@ -157,11 +157,12 @@ export const exportThesisAttendanceToPDF = (
   headerImageUrl?: string,
   footerImageUrl?: string,
   headerHeight: number = 100,
-  footerHeight: number = 80
+  footerHeight: number = 80,
+  headerMarginTop: number = 15
 ) => {
   const doc = new jsPDF('landscape');
   
-  let startY = 15;
+  let startY = headerMarginTop;
   
   // Add header image if provided
   if (headerImageUrl) {

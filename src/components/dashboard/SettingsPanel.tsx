@@ -21,6 +21,7 @@ const SettingsPanel = () => {
   const [footerImageFile, setFooterImageFile] = useState<File | null>(null);
   const [headerHeight, setHeaderHeight] = useState(100);
   const [footerHeight, setFooterHeight] = useState(80);
+  const [headerMarginTop, setHeaderMarginTop] = useState(15);
 
   useEffect(() => {
     loadSettings();
@@ -35,6 +36,7 @@ const SettingsPanel = () => {
       setUsername(data.admin_username || "Admin");
       setHeaderHeight(data.header_height || 100);
       setFooterHeight(data.footer_height || 80);
+      setHeaderMarginTop(data.header_margin_top || 15);
     }
   };
 
@@ -137,6 +139,7 @@ const SettingsPanel = () => {
       footer_image_url: footerUrl,
       header_height: headerHeight,
       footer_height: footerHeight,
+      header_margin_top: headerMarginTop,
     });
 
     await loadSettings();
@@ -299,6 +302,21 @@ const SettingsPanel = () => {
               min="50"
               max="200"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="header-margin-top">Posisi Header dari Atas (px)</Label>
+            <Input
+              id="header-margin-top"
+              type="number"
+              value={headerMarginTop}
+              onChange={(e) => setHeaderMarginTop(Number(e.target.value))}
+              min="5"
+              max="50"
+            />
+            <p className="text-sm text-muted-foreground">
+              Atur jarak header dari margin atas. Nilai lebih kecil = lebih dekat ke atas
+            </p>
           </div>
 
           <div className="space-y-2">

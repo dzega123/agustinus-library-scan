@@ -75,7 +75,8 @@ const ThesisAttendanceManager = () => {
       settings.header_image_url,
       settings.footer_image_url,
       settings.header_height || 100,
-      settings.footer_height || 80
+      settings.footer_height || 80,
+      settings.header_margin_top || 15
     );
     toast({
       title: "Berhasil!",
