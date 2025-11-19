@@ -101,6 +101,7 @@ export type Database = {
           footer_text: string | null
           header_height: number | null
           header_image_url: string | null
+          header_margin_top: number | null
           id: string
           library_name: string | null
           updated_at: string | null
@@ -113,6 +114,7 @@ export type Database = {
           footer_text?: string | null
           header_height?: number | null
           header_image_url?: string | null
+          header_margin_top?: number | null
           id?: string
           library_name?: string | null
           updated_at?: string | null
@@ -125,6 +127,7 @@ export type Database = {
           footer_text?: string | null
           header_height?: number | null
           header_image_url?: string | null
+          header_margin_top?: number | null
           id?: string
           library_name?: string | null
           updated_at?: string | null

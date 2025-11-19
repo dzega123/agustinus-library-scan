@@ -45,6 +45,7 @@ export interface LibrarySettings {
   footer_image_url?: string;
   header_height?: number;
   footer_height?: number;
+  header_margin_top?: number;
   admin_username: string;
   admin_password: string;
 }
