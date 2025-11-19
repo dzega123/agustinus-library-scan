@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RefreshCw } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import * as supabaseStorage from "@/utils/supabaseStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendance = () => {
+  const { t, language } = useLanguage();
   const [currentDate, setCurrentDate] = useState("");
   const [checkInId, setCheckInId] = useState("");
   const [checkOutId, setCheckOutId] = useState("");
@@ -29,7 +31,8 @@ const ThesisAttendance = () => {
   useEffect(() => {
     const updateDate = () => {
       const now = new Date();
-      const formatted = now.toLocaleDateString("id-ID", {
+      const locale = language === "id" ? "id-ID" : language === "zh" ? "zh-CN" : "en-US";
+      const formatted = now.toLocaleDateString(locale, {
         weekday: "long",
         day: "2-digit",
         month: "long",
@@ -44,7 +47,7 @@ const ThesisAttendance = () => {
     updateDate();
     const interval = setInterval(updateDate, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [language]);
 
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,8 +59,8 @@ const ThesisAttendance = () => {
       const existingThesis = await supabaseStorage.checkThesisAttendanceToday(checkInId.trim());
       if (existingThesis) {
         toast({
-          title: "Sudah Check-in",
-          description: `${member.nama} sudah melakukan check-in hari ini`,
+          title: t("notif.student.already.checkin"),
+          description: `${member.nama} ${t("notif.student.already.checkin")}`,
           variant: "destructive",
         });
         setCheckInId("");
@@ -89,14 +92,14 @@ const ThesisAttendance = () => {
         await loadAttendances();
         setCheckInId("");
         toast({
-          title: "Berhasil!",
-          description: `Check-in berhasil untuk ${member.nama}`,
+          title: t("notif.checkin.success"),
+          description: `${t("notif.checkin.success")} ${member.nama}`,
         });
       }
     } else {
       toast({
         title: "Error",
-        description: "ID tidak ditemukan",
+        description: t("notif.student.notfound"),
         variant: "destructive",
       });
     }
@@ -111,7 +114,7 @@ const ThesisAttendance = () => {
     if (!member) {
       toast({
         title: "Error",
-        description: "ID tidak ditemukan di daftar anggota",
+        description: t("notif.student.notfound"),
         variant: "destructive",
       });
       return;
@@ -122,13 +125,13 @@ const ThesisAttendance = () => {
       await loadAttendances();
       setCheckOutId("");
       toast({
-        title: "Berhasil!",
-        description: `Check-out berhasil untuk ${member.nama}`,
+        title: t("notif.checkout.success"),
+        description: `${t("notif.checkout.success")} ${member.nama}`,
       });
     } else {
       toast({
         title: "Error",
-        description: "Tidak ada check-in untuk ID ini hari ini",
+        description: t("notif.checkout.notfound"),
         variant: "destructive",
       });
     }
@@ -146,26 +149,23 @@ const ThesisAttendance = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            STT REFORMED INJILI INTERNASIONAL
+            {t("header.library")}
           </h2>
-          <h3 className="text-xl font-semibold text-foreground mb-1">
-            PERPUSTAKAAN AGUSTINUS
-          </h3>
           <p className="text-lg text-muted-foreground">
-            ABSENSI MAHASISWA SKRIPSI DAN TESIS
+            {t("thesis.title")}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
           <Card>
             <CardContent className="pt-6">
-              <h4 className="text-xl font-semibold text-center mb-4">Check-in</h4>
+              <h4 className="text-xl font-semibold text-center mb-4">{t("thesis.checkin.button")}</h4>
               <form onSubmit={handleCheckIn} className="space-y-4">
                 <Input
                   type="text"
                   value={checkInId}
                   onChange={(e) => setCheckInId(e.target.value)}
-                  placeholder="Scan kartu Anda"
+                  placeholder={t("thesis.checkin.id.placeholder")}
                   className="text-center"
                   autoFocus
                 />
@@ -178,13 +178,13 @@ const ThesisAttendance = () => {
 
           <Card>
             <CardContent className="pt-6">
-              <h4 className="text-xl font-semibold text-center mb-4">Check-out</h4>
+              <h4 className="text-xl font-semibold text-center mb-4">{t("thesis.checkout.button")}</h4>
               <form onSubmit={handleCheckOut} className="space-y-4">
                 <Input
                   type="text"
                   value={checkOutId}
                   onChange={(e) => setCheckOutId(e.target.value)}
-                  placeholder="Scan kartu Anda"
+                  placeholder={t("thesis.checkout.id.placeholder")}
                   className="text-center"
                 />
                 <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
@@ -198,7 +198,7 @@ const ThesisAttendance = () => {
         <div className="text-center mb-4">
           <Button onClick={handleRefresh} variant="outline" size="lg">
             <RefreshCw className="w-4 h-4 mr-2" />
-            Cek Data/Refresh
+            {t("thesis.refresh")}
           </Button>
         </div>
 
@@ -206,23 +206,23 @@ const ThesisAttendance = () => {
           <Card>
             <CardContent className="pt-6">
               <h4 className="text-xl font-bold text-center mb-4">
-                Data Absensi Mahasiswa Skripsi dan Tesis
+                {t("thesis.today")}
               </h4>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>No</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Nama</TableHead>
-                    <TableHead>Masuk</TableHead>
-                    <TableHead>Keluar</TableHead>
+                    <TableHead>{t("thesis.table.no")}</TableHead>
+                    <TableHead>{t("thesis.table.id")}</TableHead>
+                    <TableHead>{t("thesis.table.name")}</TableHead>
+                    <TableHead>{t("thesis.table.checkin")}</TableHead>
+                    <TableHead>{t("thesis.table.checkout")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {attendances.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        Belum ada data absensi hari ini
+                        {t("thesis.empty")}
                       </TableCell>
                     </TableRow>
                   ) : (

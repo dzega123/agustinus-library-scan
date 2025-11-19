@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import Footer from "@/components/Footer";
@@ -17,6 +18,7 @@ import { storageUtils } from "@/utils/localStorage";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const [currentDate, setCurrentDate] = useState("");
   const [visitors, setVisitors] = useState(() => storageUtils.getTodayCheckIns());
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -25,7 +27,8 @@ const Index = () => {
   useEffect(() => {
     const updateDate = () => {
       const now = new Date();
-      const formatted = now.toLocaleDateString("id-ID", {
+      const locale = language === "id" ? "id-ID" : language === "zh" ? "zh-CN" : "en-US";
+      const formatted = now.toLocaleDateString(locale, {
         weekday: "long",
         day: "2-digit",
         month: "long",
@@ -40,7 +43,7 @@ const Index = () => {
     updateDate();
     const interval = setInterval(updateDate, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [language]);
 
   const showSuccess = (message: string) => {
     setNotification({ show: true, message });
@@ -57,12 +60,12 @@ const Index = () => {
       
       if (checkIn) {
         setVisitors(storageUtils.getTodayCheckIns());
-        showSuccess(`Selamat datang, ${member.nama}!`);
+        showSuccess(`${t("notif.welcome")}, ${member.nama}!`);
       } else {
-        showSuccess("Anda sudah melakukan check-in hari ini.");
+        showSuccess(t("notif.already.checkin"));
       }
     } else {
-      showSuccess("ID Anggota tidak ditemukan. Silakan daftar terlebih dahulu.");
+      showSuccess(t("notif.notfound"));
     }
   };
 
@@ -75,9 +78,9 @@ const Index = () => {
     
     if (checkIn) {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`Pendaftaran berhasil! Selamat datang, ${data.nama}!`);
+      showSuccess(`${t("notif.register.success")}, ${data.nama}!`);
     } else {
-      showSuccess("Anda sudah melakukan check-in hari ini.");
+      showSuccess(t("notif.already.checkin"));
     }
   };
 
@@ -90,9 +93,9 @@ const Index = () => {
     
     if (checkIn) {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`Rombongan dari ${data.namaInstansi} berhasil terdaftar!`);
+      showSuccess(t("notif.group.success").replace("{name}", data.namaInstansi));
     } else {
-      showSuccess("Rombongan ini sudah melakukan check-in hari ini.");
+      showSuccess(t("notif.group.already"));
     }
   };
 
@@ -106,10 +109,10 @@ const Index = () => {
     
     if (checkIn) {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`Pendaftaran anggota berhasil! Selamat datang, ${data.nama}!`);
+      showSuccess(`${t("notif.member.success")}, ${data.nama}!`);
     } else {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`Anggota berhasil didaftarkan, tetapi sudah check-in hari ini.`);
+      showSuccess(t("notif.member.already"));
     }
   };
 
@@ -121,10 +124,10 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="anggota" className="w-full">
           <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8">
-            <TabsTrigger value="anggota">Anggota</TabsTrigger>
-            <TabsTrigger value="non-anggota">Non Anggota</TabsTrigger>
-            <TabsTrigger value="rombongan">Rombongan</TabsTrigger>
-            <TabsTrigger value="today">Pengunjung Hari Ini</TabsTrigger>
+            <TabsTrigger value="anggota">{t("tab.member")}</TabsTrigger>
+            <TabsTrigger value="non-anggota">{t("tab.nonmember")}</TabsTrigger>
+            <TabsTrigger value="rombongan">{t("tab.group")}</TabsTrigger>
+            <TabsTrigger value="today">{t("tab.visitors")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="anggota">

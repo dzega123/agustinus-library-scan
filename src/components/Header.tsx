@@ -1,5 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSelector from "./LanguageSelector";
 
 interface HeaderProps {
   currentDate: string;
@@ -8,6 +10,7 @@ interface HeaderProps {
 
 const Header = ({ currentDate, visitorCount }: HeaderProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <header className="bg-gradient-to-r from-primary to-primary-dark text-white p-6 shadow-lg">
@@ -20,13 +23,16 @@ const Header = ({ currentDate, visitorCount }: HeaderProps) => {
             <BookOpen className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-accent">Buku Tamu Pengunjung</h1>
-            <p className="text-lg">Perpustakaan Agustinus STTRII</p>
-            <p className="text-sm opacity-90">Perpustakaan Pusat</p>
+            <h1 className="text-2xl font-bold text-accent">{t("header.title")}</h1>
+            <p className="text-lg">{t("header.library")}</p>
+            <p className="text-sm opacity-90">{t("header.center")}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm opacity-90">{currentDate}</p>
+        <div className="flex items-center gap-4">
+          <LanguageSelector />
+          <div className="text-right">
+            <p className="text-sm opacity-90">{currentDate}</p>
+          </div>
         </div>
       </div>
     </header>
