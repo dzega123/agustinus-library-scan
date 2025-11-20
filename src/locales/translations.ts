@@ -29,6 +29,8 @@ export const translations = {
     "nonmember.phone.placeholder": "Masukkan no. telepon",
     "nonmember.address": "Alamat",
     "nonmember.address.placeholder": "Masukkan alamat",
+    "nonmember.purpose": "Tujuan Kunjungan",
+    "nonmember.purpose.placeholder": "Masukkan tujuan kunjungan (opsional)",
     "nonmember.submit": "Daftar & Check In",
     
     // Group Tab
@@ -142,6 +144,8 @@ export const translations = {
     "nonmember.phone.placeholder": "Enter phone number",
     "nonmember.address": "Address",
     "nonmember.address.placeholder": "Enter address",
+    "nonmember.purpose": "Visit Purpose",
+    "nonmember.purpose.placeholder": "Enter visit purpose (optional)",
     "nonmember.submit": "Register & Check In",
     
     // Group Tab
@@ -255,6 +259,8 @@ export const translations = {
     "nonmember.phone.placeholder": "输入电话号码",
     "nonmember.address": "地址",
     "nonmember.address.placeholder": "输入地址",
+    "nonmember.purpose": "访问目的",
+    "nonmember.purpose.placeholder": "输入访问目的（可选）",
     "nonmember.submit": "注册并签到",
     
     // Group Tab

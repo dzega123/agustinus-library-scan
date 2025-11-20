@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Users, UserCheck, FileText, BarChart3, Settings, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { Home, Users, UserCheck, FileText, BarChart3, Calendar, Settings, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,7 @@ import MembersManager from "@/components/dashboard/MembersManager";
 import VisitorsManager from "@/components/dashboard/VisitorsManager";
 import ThesisAttendanceManager from "@/components/dashboard/ThesisAttendanceManager";
 import Statistics from "@/components/dashboard/Statistics";
+import MonthlyStatistics from "@/components/dashboard/MonthlyStatistics";
 import SettingsPanel from "@/components/dashboard/SettingsPanel";
 
 const Dashboard = () => {
@@ -30,7 +31,8 @@ const Dashboard = () => {
     { id: "members", label: "Daftar Anggota", icon: Users },
     { id: "visitors", label: "Daftar Pengunjung", icon: UserCheck },
     { id: "thesis", label: "Absensi Mahasiswa Akhir", icon: FileText },
-    { id: "statistics", label: "Grafik & Statistik", icon: BarChart3 },
+    { id: "statistics", label: "Grafik Mingguan", icon: BarChart3 },
+    { id: "monthly", label: "Grafik Bulanan", icon: Calendar },
     { id: "settings", label: "Pengaturan", icon: Settings },
   ];
 
@@ -46,6 +48,8 @@ const Dashboard = () => {
         return <ThesisAttendanceManager />;
       case "statistics":
         return <Statistics />;
+      case "monthly":
+        return <MonthlyStatistics />;
       case "settings":
         return <SettingsPanel />;
       default:

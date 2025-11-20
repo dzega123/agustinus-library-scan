@@ -42,6 +42,7 @@ const VisitorsManager = () => {
     const excelData = filteredVisitors.map(v => ({
       'Nama': v.nama,
       'Tipe': v.type,
+      'Tujuan Kunjungan': v.tujuanKunjungan || '-',
       'Tanggal': new Date(v.timestamp).toLocaleDateString('id-ID'),
       'Waktu': new Date(v.timestamp).toLocaleTimeString('id-ID')
     }));
@@ -153,6 +154,7 @@ const VisitorsManager = () => {
               <TableRow>
                 <TableHead>Nama</TableHead>
                 <TableHead>Tipe Keanggotaan</TableHead>
+                <TableHead>Tujuan Kunjungan</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Waktu</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
@@ -161,7 +163,7 @@ const VisitorsManager = () => {
             <TableBody>
               {filteredVisitors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Tidak ada data pengunjung
                   </TableCell>
                 </TableRow>
@@ -170,6 +172,7 @@ const VisitorsManager = () => {
                   <TableRow key={visitor.id}>
                     <TableCell>{visitor.nama}</TableCell>
                     <TableCell>{visitor.type}</TableCell>
+                    <TableCell>{visitor.tujuanKunjungan || '-'}</TableCell>
                     <TableCell>
                       {new Date(visitor.timestamp).toLocaleDateString("id-ID")}
                     </TableCell>
