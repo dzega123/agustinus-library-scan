@@ -19,6 +19,7 @@ export interface RombonganData {
   jenisKelamin: Record<string, number>;
   pekerjaan: Record<string, number>;
   pendidikan: Record<string, number>;
+  tujuanKunjungan?: string;
 }
 
 const RombonganTab = ({ onRegister }: RombonganTabProps) => {
@@ -33,6 +34,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
     jenisKelamin: {},
     pekerjaan: {},
     pendidikan: {},
+    tujuanKunjungan: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -214,6 +216,19 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
           </div>
         </div>
 
+        <div>
+          <Label htmlFor="tujuanKunjungan">Tujuan Kunjungan (Opsional)</Label>
+          <Textarea
+            id="tujuanKunjungan"
+            value={formData.tujuanKunjungan || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, tujuanKunjungan: e.target.value })
+            }
+            rows={2}
+            placeholder="Contoh: Kunjungan edukasi, studi banding, dll."
+          />
+        </div>
+
         <div className="flex gap-3 justify-center">
           <Button type="submit" className="px-8">
             Simpan
@@ -233,6 +248,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
                 jenisKelamin: {},
                 pekerjaan: {},
                 pendidikan: {},
+                tujuanKunjungan: "",
               })
             }
           >

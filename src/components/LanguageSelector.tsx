@@ -22,13 +22,11 @@ const LanguageSelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-white/90 hover:bg-white">
-          <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLang?.flag} {currentLang?.name}</span>
-          <span className="sm:hidden">{currentLang?.flag}</span>
+        <Button variant="outline" size="icon" className="rounded-full w-12 h-12 bg-white/90 hover:bg-white border-2">
+          <span className="text-2xl">{currentLang?.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-background border">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}

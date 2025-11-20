@@ -11,6 +11,7 @@ interface CheckInRecord {
   nama: string;
   type: string;
   timestamp: string;
+  tujuanKunjungan?: string;
   data?: any;
 }
 
@@ -57,6 +58,12 @@ export const storageUtils = {
   findMemberById: (idAnggota: string): StoredMember | undefined => {
     const members = storageUtils.getMembers();
     return members.find((m) => m.idAnggota === idAnggota);
+  },
+
+  deleteMember: (idAnggota: string) => {
+    const members = storageUtils.getMembers();
+    const filteredMembers = members.filter((m) => m.idAnggota !== idAnggota);
+    localStorage.setItem(MEMBERS_KEY, JSON.stringify(filteredMembers));
   },
 
   // Check-in management
@@ -211,5 +218,60 @@ export const storageUtils = {
     const newSettings = { ...currentSettings, ...settings };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
     return newSettings;
+  },
+
+  // Statistics - Monthly data
+  getMonthlyCheckIns: (year: number): { month: number; count: number }[] => {
+    const checkIns = storageUtils.getCheckIns();
+    const monthlyCounts: { [key: number]: number } = {};
+    
+    // Initialize all months with 0
+    for (let i = 0; i < 12; i++) {
+      monthlyCounts[i] = 0;
+    }
+    
+    checkIns.forEach((checkIn) => {
+      const date = new Date(checkIn.timestamp);
+      if (date.getFullYear() === year) {
+        const month = date.getMonth();
+        monthlyCounts[month]++;
+      }
+    });
+    
+    return Object.entries(monthlyCounts).map(([month, count]) => ({
+      month: parseInt(month),
+      count,
+    }));
+  },
+
+  // Get weekly check-ins for a specific week
+  getWeeklyCheckIns: (weekStart: Date): { date: string; count: number }[] => {
+    const checkIns = storageUtils.getCheckIns();
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    
+    const dayCounts: { [key: string]: number } = {};
+    
+    // Initialize all days in the week
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      dayCounts[dateStr] = 0;
+    }
+    
+    checkIns.forEach((checkIn) => {
+      const checkInDate = new Date(checkIn.timestamp);
+      const dateStr = checkInDate.toISOString().split('T')[0];
+      
+      if (dayCounts[dateStr] !== undefined) {
+        dayCounts[dateStr]++;
+      }
+    });
+    
+    return Object.entries(dayCounts).map(([date, count]) => ({
+      date,
+      count,
+    }));
   },
 };

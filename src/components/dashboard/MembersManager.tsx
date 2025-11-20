@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import * as supabaseStorage from "@/utils/supabaseStorage";
+import { storageUtils } from "@/utils/localStorage";
 import { Download, Plus, Pencil, Trash2, Search } from "lucide-react";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import { useToast } from "@/hooks/use-toast";
@@ -19,38 +19,44 @@ const MembersManager = () => {
     loadMembers();
   }, []);
 
-  const loadMembers = async () => {
-    const data = await supabaseStorage.getMembers();
-    setMembers(data);
+  const loadMembers = () => {
+    setMembers(storageUtils.getMembers());
   };
 
   const filteredMembers = members.filter(
     (member) =>
       member.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.member_id.toLowerCase().includes(searchQuery.toLowerCase())
+      member.idAnggota.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleRegister = async (data: RegisterData) => {
-    await supabaseStorage.addMember({
-      member_id: data.idAnggota,
+  const handleRegister = (data: RegisterData) => {
+    const result = storageUtils.addMember({
+      idAnggota: data.idAnggota,
       nama: data.nama,
-      tipe_keanggotaan: data.tipeKeanggotaan,
-      jurusan: data.institusi,
-      no_telepon: '',
-      alamat: '',
-      email: '',
+      tipeKeanggotaan: data.tipeKeanggotaan,
+      institusi: data.institusi,
     });
-    await loadMembers();
-    toast({
-      title: "Berhasil!",
-      description: "Anggota baru berhasil didaftarkan",
-    });
+    
+    if (result) {
+      loadMembers();
+      setIsRegisterModalOpen(false);
+      toast({
+        title: "Berhasil!",
+        description: "Anggota baru berhasil didaftarkan",
+      });
+    } else {
+      toast({
+        title: "Gagal!",
+        description: "ID Anggota sudah terdaftar",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = async (memberId: string) => {
+  const handleDelete = (memberId: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus anggota ini?")) {
-      await supabaseStorage.deleteMember(memberId);
-      await loadMembers();
+      storageUtils.deleteMember(memberId);
+      loadMembers();
       toast({
         title: "Berhasil!",
         description: "Anggota berhasil dihapus",
@@ -60,14 +66,11 @@ const MembersManager = () => {
 
   const handleExportExcel = () => {
     const excelData = filteredMembers.map(m => ({
-      'ID Anggota': m.member_id,
+      'ID Anggota': m.idAnggota,
       'Nama': m.nama,
-      'Tipe Keanggotaan': m.tipe_keanggotaan,
-      'Jurusan': m.jurusan,
-      'Email': m.email || '-',
-      'No Telepon': m.no_telepon || '-',
-      'Alamat': m.alamat || '-',
-      'Tanggal Daftar': new Date(m.created_at).toLocaleDateString('id-ID')
+      'Tipe Keanggotaan': m.tipeKeanggotaan,
+      'Institusi': m.institusi,
+      'Tanggal Daftar': new Date(m.registeredAt).toLocaleDateString('id-ID')
     }));
     exportToExcel(excelData, 'Daftar_Anggota');
     toast({
@@ -148,13 +151,13 @@ const MembersManager = () => {
                 </TableRow>
               ) : (
                 filteredMembers.map((member) => (
-                  <TableRow key={member.member_id}>
-                    <TableCell className="font-mono">{member.member_id}</TableCell>
+                  <TableRow key={member.idAnggota}>
+                    <TableCell className="font-mono">{member.idAnggota}</TableCell>
                     <TableCell>{member.nama}</TableCell>
-                    <TableCell>{member.tipe_keanggotaan}</TableCell>
-                    <TableCell>{member.jurusan}</TableCell>
+                    <TableCell>{member.tipeKeanggotaan}</TableCell>
+                    <TableCell>{member.institusi}</TableCell>
                     <TableCell>
-                      {new Date(member.created_at).toLocaleDateString("id-ID")}
+                      {new Date(member.registeredAt).toLocaleDateString("id-ID")}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -164,7 +167,7 @@ const MembersManager = () => {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => handleDelete(member.member_id)}
+                          onClick={() => handleDelete(member.idAnggota)}
                           title="Hapus"
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
