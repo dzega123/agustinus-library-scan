@@ -15,6 +15,7 @@ export interface NonAnggotaData {
   pendidikan: string;
   jenisKelamin: string;
   alamat: string;
+  tujuanKunjungan?: string;
 }
 
 const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
@@ -24,6 +25,7 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
     pendidikan: "",
     jenisKelamin: "",
     alamat: "",
+    tujuanKunjungan: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,6 +38,7 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
         pendidikan: "",
         jenisKelamin: "",
         alamat: "",
+        tujuanKunjungan: "",
       });
     }
   };
@@ -142,6 +145,17 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
           />
         </div>
 
+        <div>
+          <Label htmlFor="tujuanKunjungan">Tujuan Kunjungan (Opsional)</Label>
+          <Textarea
+            id="tujuanKunjungan"
+            value={formData.tujuanKunjungan || ""}
+            onChange={(e) => setFormData({ ...formData, tujuanKunjungan: e.target.value })}
+            rows={2}
+            placeholder="Contoh: Membaca buku, mencari referensi, dll."
+          />
+        </div>
+
         <div className="flex gap-3 justify-center">
           <Button type="submit" className="px-8">
             Simpan
@@ -156,6 +170,7 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
                 pendidikan: "",
                 jenisKelamin: "",
                 alamat: "",
+                tujuanKunjungan: "",
               })
             }
           >

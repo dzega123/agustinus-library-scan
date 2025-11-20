@@ -39,16 +39,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali
-        </Button>
-
+      <div className="w-full max-w-md">
         <Card>
           <CardHeader className="space-y-4">
             <div className="flex justify-center">
@@ -85,9 +76,20 @@ const Login = () => {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" size="lg">
-                Login
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Kembali
+                </Button>
+                <Button type="submit" className="flex-1" size="lg">
+                  Login
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>

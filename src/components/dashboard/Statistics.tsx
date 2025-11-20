@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { storageUtils } from "@/utils/localStorage";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -22,44 +22,22 @@ const Statistics = () => {
     loadWeekData();
   }, [currentWeekStart]);
 
-  const loadWeekData = async () => {
+  const loadWeekData = () => {
     const weekStart = new Date(currentWeekStart);
     weekStart.setHours(0, 0, 0, 0);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-
-    const { data } = await supabase
-      .from('check_ins')
-      .select('date, created_at')
-      .gte('date', weekStart.toISOString().split('T')[0])
-      .lt('date', weekEnd.toISOString().split('T')[0])
-      .order('date');
-
-    // Group by day
-    const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    const dayCounts: { [key: string]: number } = {};
     
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStart);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      dayCounts[dateStr] = 0;
-    }
-
-    data?.forEach(item => {
-      if (item.date && dayCounts[item.date] !== undefined) {
-        dayCounts[item.date]++;
-      }
-    });
-
-    const chartData = Object.entries(dayCounts).map(([date, count], index) => ({
+    const weeklyData = storageUtils.getWeeklyCheckIns(weekStart);
+    
+    const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    
+    const chartData = weeklyData.map((item, index) => ({
       name: dayNames[index],
-      date: date,
-      kunjungan: count,
+      date: item.date,
+      kunjungan: item.count,
     }));
 
     setWeekData(chartData);
-    setTotalVisitors(data?.length || 0);
+    setTotalVisitors(weeklyData.reduce((sum, item) => sum + item.count, 0));
   };
 
   const goToPreviousWeek = () => {
