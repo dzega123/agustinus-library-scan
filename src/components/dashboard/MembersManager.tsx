@@ -225,10 +225,11 @@ const MembersManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Foto</TableHead>
                 <TableHead>ID Anggota</TableHead>
                 <TableHead>Nama</TableHead>
                 <TableHead>Tipe Keanggotaan</TableHead>
-                <TableHead>Jurusan</TableHead>
+                <TableHead>Institusi</TableHead>
                 <TableHead>Tanggal Daftar</TableHead>
                 <TableHead>Aksi</TableHead>
               </TableRow>
@@ -236,13 +237,26 @@ const MembersManager = () => {
             <TableBody>
               {filteredMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     Tidak ada data anggota
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredMembers.map((member) => (
                   <TableRow key={member.idAnggota}>
+                    <TableCell>
+                      {member.photoUrl ? (
+                        <img 
+                          src={member.photoUrl} 
+                          alt={member.nama}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-primary"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                          No Photo
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-mono">{member.idAnggota}</TableCell>
                     <TableCell>{member.nama}</TableCell>
                     <TableCell>{member.tipeKeanggotaan}</TableCell>

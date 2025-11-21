@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Calendar, Trash2 } from "lucide-react";
+import { Download, Calendar, Trash2, Upload } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -155,11 +155,11 @@ const ThesisAttendanceManager = () => {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleExportExcel}>
-            <Download className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 mr-2" />
             Ekspor Excel
           </Button>
           <Button variant="outline" onClick={handleExportPDF}>
-            <Download className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 mr-2" />
             Ekspor PDF
           </Button>
           <Button variant="destructive" onClick={handleCleanupDuplicates}>

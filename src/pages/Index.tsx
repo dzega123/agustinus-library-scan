@@ -22,7 +22,12 @@ const Index = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [visitors, setVisitors] = useState(() => storageUtils.getTodayCheckIns());
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [notification, setNotification] = useState({ show: false, message: "" });
+  const [notification, setNotification] = useState({ 
+    show: false, 
+    message: "",
+    memberName: "",
+    memberPhoto: "",
+  });
 
   useEffect(() => {
     const updateDate = () => {
@@ -46,8 +51,13 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [language]);
 
-  const showSuccess = (message: string) => {
-    setNotification({ show: true, message });
+  const showSuccess = (message: string, name?: string, photo?: string) => {
+    setNotification({ 
+      show: true, 
+      message,
+      memberName: name || "",
+      memberPhoto: photo || "",
+    });
   };
 
   const handleMemberCheckIn = (memberId: string) => {
@@ -61,7 +71,7 @@ const Index = () => {
       
       if (checkIn) {
         setVisitors(storageUtils.getTodayCheckIns());
-        showSuccess(`${t("notif.welcome")}, ${member.nama}!`);
+        showSuccess(`${t("notif.welcome")}, ${member.nama}!`, member.nama, member.photoUrl);
       } else {
         showSuccess(t("notif.already.checkin"));
       }
@@ -79,7 +89,7 @@ const Index = () => {
     
     if (checkIn) {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`${t("notif.register.success")}, ${data.nama}!`);
+      showSuccess(`${t("notif.register.success")}, ${data.nama}!`, data.nama);
     } else {
       showSuccess(t("notif.already.checkin"));
     }
@@ -110,7 +120,7 @@ const Index = () => {
     
     if (checkIn) {
       setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`${t("notif.member.success")}, ${data.nama}!`);
+      showSuccess(`${t("notif.member.success")}, ${data.nama}!`, data.nama, data.photoUrl);
     } else {
       setVisitors(storageUtils.getTodayCheckIns());
       showSuccess(t("notif.member.already"));
@@ -160,7 +170,9 @@ const Index = () => {
       <SuccessNotification
         show={notification.show}
         message={notification.message}
-        onClose={() => setNotification({ show: false, message: "" })}
+        memberName={notification.memberName}
+        memberPhoto={notification.memberPhoto}
+        onClose={() => setNotification({ show: false, message: "", memberName: "", memberPhoto: "" })}
       />
       
       <Footer />
