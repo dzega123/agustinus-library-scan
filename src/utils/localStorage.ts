@@ -4,6 +4,7 @@ interface StoredMember {
   tipeKeanggotaan: string;
   institusi: string;
   registeredAt: string;
+  photoUrl?: string;
 }
 
 interface CheckInRecord {
