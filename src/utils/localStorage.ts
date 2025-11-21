@@ -178,6 +178,12 @@ export const storageUtils = {
     return false;
   },
 
+  deleteThesisAttendance: (id: string) => {
+    const attendances = storageUtils.getThesisAttendances();
+    const filteredAttendances = attendances.filter((a) => a.id !== id);
+    localStorage.setItem(THESIS_ATTENDANCE_KEY, JSON.stringify(filteredAttendances));
+  },
+
   removeDuplicateThesisAttendances: () => {
     const attendances = storageUtils.getThesisAttendances();
     const seen = new Map<string, ThesisAttendance>();

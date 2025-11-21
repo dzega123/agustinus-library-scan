@@ -95,9 +95,7 @@ const ThesisAttendanceManager = () => {
   };
 
   const handleDelete = (id: string) => {
-    const allAttendances = storageUtils.getThesisAttendances();
-    const updated = allAttendances.filter(att => att.id !== id);
-    localStorage.setItem('thesis_attendances', JSON.stringify(updated));
+    storageUtils.deleteThesisAttendance(id);
     loadData();
     toast({
       title: "Berhasil!",
