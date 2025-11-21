@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Plus, Pencil, Trash2, Search, Upload } from "lucide-react";
+import { Download, Plus, Pencil, Trash2, Search, Upload, FileDown } from "lucide-react";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import { useToast } from "@/hooks/use-toast";
 import { exportToExcel, exportMembersToPDF } from "@/utils/exportUtils";
@@ -89,6 +89,20 @@ const MembersManager = () => {
     });
   };
 
+  const handleDownloadTemplate = () => {
+    const templateData = [{
+      'ID Anggota': '',
+      'Nama': '',
+      'Tipe Keanggotaan': '',
+      'Institusi': ''
+    }];
+    exportToExcel(templateData, 'Template_Anggota');
+    toast({
+      title: "Berhasil!",
+      description: "Template Excel berhasil diunduh. Silakan isi data dan impor kembali.",
+    });
+  };
+
   const handleImportExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -168,8 +182,12 @@ const MembersManager = () => {
             <Plus className="w-4 h-4 mr-2" />
             Tambah Anggota
           </Button>
+          <Button variant="outline" onClick={handleDownloadTemplate}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Download Template
+          </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-2" />
             Impor Excel
           </Button>
           <input
@@ -180,11 +198,11 @@ const MembersManager = () => {
             className="hidden"
           />
           <Button variant="outline" onClick={handleExportExcel}>
-            <Download className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 mr-2" />
             Ekspor Excel
           </Button>
           <Button variant="outline" onClick={handleExportPDF}>
-            <Download className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 mr-2" />
             Ekspor PDF
           </Button>
         </CardContent>
