@@ -14,6 +14,7 @@ const MembersManager = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -32,27 +33,56 @@ const MembersManager = () => {
   );
 
   const handleRegister = (data: RegisterData) => {
-    const result = storageUtils.addMember({
-      idAnggota: data.idAnggota,
-      nama: data.nama,
-      tipeKeanggotaan: data.tipeKeanggotaan,
-      institusi: data.institusi,
-    });
-    
-    if (result) {
+    if (editingMember) {
+      // Update existing member
+      storageUtils.updateMember(editingMember.idAnggota, {
+        nama: data.nama,
+        tipeKeanggotaan: data.tipeKeanggotaan,
+        institusi: data.institusi,
+        photoUrl: data.photoUrl,
+      });
       loadMembers();
       setIsRegisterModalOpen(false);
+      setEditingMember(null);
       toast({
         title: "Berhasil!",
-        description: "Anggota baru berhasil didaftarkan",
+        description: "Data anggota berhasil diperbarui",
       });
     } else {
-      toast({
-        title: "Gagal!",
-        description: "ID Anggota sudah terdaftar",
-        variant: "destructive",
+      // Add new member
+      const result = storageUtils.addMember({
+        idAnggota: data.idAnggota,
+        nama: data.nama,
+        tipeKeanggotaan: data.tipeKeanggotaan,
+        institusi: data.institusi,
+        photoUrl: data.photoUrl,
       });
+      
+      if (result) {
+        loadMembers();
+        setIsRegisterModalOpen(false);
+        toast({
+          title: "Berhasil!",
+          description: "Anggota baru berhasil didaftarkan",
+        });
+      } else {
+        toast({
+          title: "Gagal!",
+          description: "ID Anggota sudah terdaftar",
+          variant: "destructive",
+        });
+      }
     }
+  };
+
+  const handleEdit = (member: any) => {
+    setEditingMember(member);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsRegisterModalOpen(false);
+    setEditingMember(null);
   };
 
   const handleDelete = (memberId: string) => {
@@ -266,7 +296,12 @@ const MembersManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" title="Edit">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEdit(member)}
+                          title="Edit"
+                        >
                           <Pencil className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -289,8 +324,10 @@ const MembersManager = () => {
 
       <RegisterModal
         open={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
+        onClose={handleCloseModal}
         onRegister={handleRegister}
+        initialData={editingMember}
+        isEditMode={!!editingMember}
       />
     </div>
   );

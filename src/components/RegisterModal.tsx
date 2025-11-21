@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -11,6 +11,8 @@ interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
   onRegister: (data: RegisterData) => void;
+  initialData?: RegisterData;
+  isEditMode?: boolean;
 }
 
 export interface RegisterData {
@@ -21,7 +23,7 @@ export interface RegisterData {
   photoUrl?: string;
 }
 
-const RegisterModal = ({ open, onClose, onRegister }: RegisterModalProps) => {
+const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = false }: RegisterModalProps) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<RegisterData>({
@@ -32,6 +34,23 @@ const RegisterModal = ({ open, onClose, onRegister }: RegisterModalProps) => {
     photoUrl: "",
   });
   const [photoPreview, setPhotoPreview] = useState<string>("");
+
+  // Initialize form with existing data when editing
+  useEffect(() => {
+    if (open && initialData) {
+      setFormData(initialData);
+      setPhotoPreview(initialData.photoUrl || "");
+    } else if (open && !isEditMode) {
+      setFormData({
+        idAnggota: "",
+        nama: "",
+        tipeKeanggotaan: "",
+        institusi: "",
+        photoUrl: "",
+      });
+      setPhotoPreview("");
+    }
+  }, [open, initialData, isEditMode]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +103,9 @@ const RegisterModal = ({ open, onClose, onRegister }: RegisterModalProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md animate-in fade-in-0 zoom-in-95 duration-200">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center">Daftar Anggota Baru</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-center">
+            {isEditMode ? "Edit Anggota" : "Daftar Anggota Baru"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div>
@@ -136,6 +157,7 @@ const RegisterModal = ({ open, onClose, onRegister }: RegisterModalProps) => {
               value={formData.idAnggota}
               onChange={(e) => setFormData({ ...formData, idAnggota: e.target.value })}
               placeholder="Masukkan kode unik kartu anggota"
+              disabled={isEditMode}
               required
             />
           </div>
@@ -187,7 +209,7 @@ const RegisterModal = ({ open, onClose, onRegister }: RegisterModalProps) => {
             <Button type="button" variant="outline" onClick={onClose}>
               Batal
             </Button>
-            <Button type="submit">Daftar</Button>
+            <Button type="submit">{isEditMode ? "Simpan" : "Daftar"}</Button>
           </div>
         </form>
       </DialogContent>
