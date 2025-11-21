@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { storageUtils } from "@/utils/localStorage";
-import { Download, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Download, Plus, Pencil, Trash2, Search, Upload } from "lucide-react";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import { useToast } from "@/hooks/use-toast";
 import { exportToExcel, exportMembersToPDF } from "@/utils/exportUtils";
+import * as XLSX from 'xlsx';
 
 const MembersManager = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -87,6 +89,66 @@ const MembersManager = () => {
     });
   };
 
+  const handleImportExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        const membersToImport = jsonData.map((row: any) => ({
+          idAnggota: String(row['ID Anggota'] || row['idAnggota'] || row['id'] || '').trim(),
+          nama: String(row['Nama'] || row['nama'] || row['name'] || '').trim(),
+          tipeKeanggotaan: String(row['Tipe Keanggotaan'] || row['tipeKeanggotaan'] || row['type'] || '').trim(),
+          institusi: String(row['Institusi'] || row['institusi'] || row['institution'] || '').trim(),
+        })).filter(member => member.idAnggota && member.nama);
+
+        if (membersToImport.length === 0) {
+          toast({
+            title: "Gagal!",
+            description: "Tidak ada data valid yang ditemukan dalam file",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const result = storageUtils.addMembersBulk(membersToImport);
+        loadMembers();
+
+        let description = `${result.added} anggota berhasil diimpor`;
+        if (result.duplicates.length > 0) {
+          description += `, ${result.duplicates.length} duplikat dilewati`;
+        }
+
+        toast({
+          title: "Berhasil!",
+          description,
+        });
+
+      } catch (error) {
+        console.error('Import error:', error);
+        toast({
+          title: "Gagal!",
+          description: "Terjadi kesalahan saat membaca file Excel",
+          variant: "destructive",
+        });
+      }
+    };
+
+    reader.readAsBinaryString(file);
+    
+    // Reset input value
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -106,6 +168,17 @@ const MembersManager = () => {
             <Plus className="w-4 h-4 mr-2" />
             Tambah Anggota
           </Button>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="w-4 h-4 mr-2" />
+            Impor Excel
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleImportExcel}
+            className="hidden"
+          />
           <Button variant="outline" onClick={handleExportExcel}>
             <Download className="w-4 h-4 mr-2" />
             Ekspor Excel
