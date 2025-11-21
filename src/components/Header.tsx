@@ -15,7 +15,7 @@ const Header = ({ currentDate, visitorCount }: HeaderProps) => {
   return (
     <header className="bg-gradient-to-r from-primary to-primary-dark text-white p-6 shadow-lg">
       <div className="container mx-auto">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div 
               className="bg-white p-2 rounded-lg cursor-pointer hover:scale-105 transition-transform"
@@ -29,11 +29,10 @@ const Header = ({ currentDate, visitorCount }: HeaderProps) => {
               <p className="text-sm opacity-90">{t("header.center")}</p>
             </div>
           </div>
-          <LanguageSelector />
-        </div>
-        <div className="text-right">
-          <p className="text-sm opacity-90">{currentDate}</p>
-          <p className="text-xs opacity-75">{t("header.visitors")}: {visitorCount}</p>
+          <div className="flex flex-col items-end gap-2">
+            <LanguageSelector />
+            <p className="text-sm opacity-90">{currentDate}</p>
+          </div>
         </div>
       </div>
     </header>

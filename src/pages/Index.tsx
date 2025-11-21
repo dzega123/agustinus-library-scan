@@ -28,15 +28,16 @@ const Index = () => {
     const updateDate = () => {
       const now = new Date();
       const locale = language === "id" ? "id-ID" : language === "zh" ? "zh-CN" : "en-US";
-      const formatted = now.toLocaleDateString(locale, {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
+      
+      const dayName = now.toLocaleDateString(locale, { weekday: "long" });
+      const day = now.getDate();
+      const month = now.toLocaleDateString(locale, { month: "long" });
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      
+      const formatted = `${dayName}, ${day} ${month} ${year}, ${hours}:${minutes}:${seconds}`;
       setCurrentDate(formatted);
     };
 
