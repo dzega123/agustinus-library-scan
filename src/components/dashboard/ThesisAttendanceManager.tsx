@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { storageUtils } from "@/utils/localStorage";
 import { Download, Calendar, Trash2 } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
@@ -93,6 +94,17 @@ const ThesisAttendanceManager = () => {
     });
   };
 
+  const handleDelete = (id: string) => {
+    const allAttendances = storageUtils.getThesisAttendances();
+    const updated = allAttendances.filter(att => att.id !== id);
+    localStorage.setItem('thesis_attendances', JSON.stringify(updated));
+    loadData();
+    toast({
+      title: "Berhasil!",
+      description: "Data absensi berhasil dihapus",
+    });
+  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -174,12 +186,13 @@ const ThesisAttendanceManager = () => {
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Check-in</TableHead>
                 <TableHead>Check-out</TableHead>
+                <TableHead>Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredAttendances.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     Tidak ada data absensi
                   </TableCell>
                 </TableRow>
@@ -203,6 +216,29 @@ const ThesisAttendanceManager = () => {
                       {att.checkOutTime
                         ? new Date(att.checkOutTime).toLocaleTimeString('id-ID')
                         : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Hapus Data Absensi?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Apakah Anda yakin ingin menghapus data absensi {att.nama}? Tindakan ini tidak dapat dibatalkan.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(att.id)}>
+                              Hapus
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))
