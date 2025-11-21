@@ -98,6 +98,23 @@ export const storageUtils = {
     return members.find((m) => m.idAnggota === idAnggota);
   },
 
+  updateMember: (idAnggota: string, updates: Partial<Omit<StoredMember, "idAnggota" | "registeredAt">>) => {
+    const members = storageUtils.getMembers();
+    const memberIndex = members.findIndex((m) => m.idAnggota === idAnggota);
+    
+    if (memberIndex === -1) {
+      return null;
+    }
+    
+    members[memberIndex] = {
+      ...members[memberIndex],
+      ...updates,
+    };
+    
+    localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
+    return members[memberIndex];
+  },
+
   deleteMember: (idAnggota: string) => {
     const members = storageUtils.getMembers();
     const filteredMembers = members.filter((m) => m.idAnggota !== idAnggota);
