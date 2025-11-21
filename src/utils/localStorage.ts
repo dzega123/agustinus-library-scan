@@ -46,6 +46,13 @@ export const storageUtils = {
 
   addMember: (member: Omit<StoredMember, "registeredAt">) => {
     const members = storageUtils.getMembers();
+    
+    // Check if member ID already exists
+    const exists = members.find(m => m.idAnggota === member.idAnggota);
+    if (exists) {
+      return null; // Return null if member already exists
+    }
+    
     const newMember: StoredMember = {
       ...member,
       registeredAt: new Date().toISOString(),
@@ -53,6 +60,36 @@ export const storageUtils = {
     members.push(newMember);
     localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
     return newMember;
+  },
+
+  addMembersBulk: (newMembers: Omit<StoredMember, "registeredAt">[]) => {
+    const existingMembers = storageUtils.getMembers();
+    const existingIds = new Set(existingMembers.map(m => m.idAnggota));
+    
+    const membersToAdd: StoredMember[] = [];
+    const duplicates: string[] = [];
+    
+    newMembers.forEach(member => {
+      if (existingIds.has(member.idAnggota)) {
+        duplicates.push(member.idAnggota);
+      } else {
+        membersToAdd.push({
+          ...member,
+          registeredAt: new Date().toISOString(),
+        });
+        existingIds.add(member.idAnggota);
+      }
+    });
+    
+    if (membersToAdd.length > 0) {
+      const updatedMembers = [...existingMembers, ...membersToAdd];
+      localStorage.setItem(MEMBERS_KEY, JSON.stringify(updatedMembers));
+    }
+    
+    return {
+      added: membersToAdd.length,
+      duplicates: duplicates,
+    };
   },
 
   findMemberById: (idAnggota: string): StoredMember | undefined => {
