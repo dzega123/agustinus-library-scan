@@ -65,6 +65,7 @@ const ThesisAttendanceManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data absensi berhasil diekspor ke Excel",
+      duration: 2000,
     });
   };
 
@@ -82,6 +83,7 @@ const ThesisAttendanceManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data absensi berhasil diekspor ke PDF",
+      duration: 2000,
     });
   };
 
@@ -91,6 +93,7 @@ const ThesisAttendanceManager = () => {
     toast({
       title: "Berhasil!",
       description: `${removed} data duplikat berhasil dihapus`,
+      duration: 2000,
     });
   };
 
@@ -100,6 +103,7 @@ const ThesisAttendanceManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data absensi berhasil dihapus",
+      duration: 2000,
     });
   };
 

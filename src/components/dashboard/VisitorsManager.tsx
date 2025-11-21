@@ -50,6 +50,7 @@ const VisitorsManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data pengunjung berhasil diekspor ke Excel",
+      duration: 2000,
     });
   };
 
@@ -62,6 +63,7 @@ const VisitorsManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data pengunjung berhasil diekspor ke PDF",
+      duration: 2000,
     });
   };
 
@@ -72,6 +74,7 @@ const VisitorsManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data pengunjung berhasil dihapus",
+      duration: 2000,
     });
   };
 
@@ -81,6 +84,7 @@ const VisitorsManager = () => {
     toast({
       title: "Berhasil!",
       description: `${removed} data duplikat berhasil dihapus`,
+      duration: 2000,
     });
   };
 

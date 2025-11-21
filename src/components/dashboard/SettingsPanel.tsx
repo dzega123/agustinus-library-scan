@@ -56,6 +56,7 @@ const SettingsPanel = () => {
     toast({
       title: "Berhasil!",
       description: "Pengaturan perpustakaan berhasil disimpan",
+      duration: 2000,
     });
   };
 
@@ -65,6 +66,7 @@ const SettingsPanel = () => {
         title: "Error",
         description: "Silakan pilih file favicon terlebih dahulu",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -83,6 +85,7 @@ const SettingsPanel = () => {
     toast({
       title: "Berhasil!",
       description: "Favicon berhasil diperbarui",
+      duration: 2000,
     });
   };
 
@@ -92,6 +95,7 @@ const SettingsPanel = () => {
         title: "Error",
         description: "Password tidak cocok",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -107,6 +111,7 @@ const SettingsPanel = () => {
     toast({
       title: "Berhasil!",
       description: "Pengaturan keamanan berhasil diperbarui",
+      duration: 2000,
     });
     
     setNewPassword("");
@@ -120,6 +125,7 @@ const SettingsPanel = () => {
     toast({
       title: "Berhasil!",
       description: "Footer berhasil diperbarui",
+      duration: 2000,
     });
   };
 
@@ -146,6 +152,7 @@ const SettingsPanel = () => {
     toast({
       title: "Berhasil!",
       description: "Pengaturan gambar PDF berhasil disimpan",
+      duration: 2000,
     });
   };
 

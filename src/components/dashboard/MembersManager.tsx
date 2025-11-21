@@ -47,6 +47,7 @@ const MembersManager = () => {
       toast({
         title: "Berhasil!",
         description: "Data anggota berhasil diperbarui",
+        duration: 2000,
       });
     } else {
       // Add new member
@@ -64,12 +65,14 @@ const MembersManager = () => {
         toast({
           title: "Berhasil!",
           description: "Anggota baru berhasil didaftarkan",
+          duration: 2000,
         });
       } else {
         toast({
           title: "Gagal!",
           description: "ID Anggota sudah terdaftar",
           variant: "destructive",
+          duration: 2000,
         });
       }
     }
@@ -92,6 +95,7 @@ const MembersManager = () => {
       toast({
         title: "Berhasil!",
         description: "Anggota berhasil dihapus",
+        duration: 2000,
       });
     }
   };
@@ -108,6 +112,7 @@ const MembersManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data anggota berhasil diekspor ke Excel",
+      duration: 2000,
     });
   };
 
@@ -116,6 +121,7 @@ const MembersManager = () => {
     toast({
       title: "Berhasil!",
       description: "Data anggota berhasil diekspor ke PDF",
+      duration: 2000,
     });
   };
 
@@ -130,6 +136,7 @@ const MembersManager = () => {
     toast({
       title: "Berhasil!",
       description: "Template Excel berhasil diunduh. Silakan isi data dan impor kembali.",
+      duration: 2000,
     });
   };
 
@@ -158,6 +165,7 @@ const MembersManager = () => {
             title: "Gagal!",
             description: "Tidak ada data valid yang ditemukan dalam file",
             variant: "destructive",
+            duration: 2000,
           });
           return;
         }
@@ -173,6 +181,7 @@ const MembersManager = () => {
         toast({
           title: "Berhasil!",
           description,
+          duration: 2000,
         });
 
       } catch (error) {
@@ -181,6 +190,7 @@ const MembersManager = () => {
           title: "Gagal!",
           description: "Terjadi kesalahan saat membaca file Excel",
           variant: "destructive",
+          duration: 2000,
         });
       }
     };
