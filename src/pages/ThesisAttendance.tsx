@@ -7,7 +7,7 @@ import { RefreshCw } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import * as supabaseStorage from "@/utils/supabaseStorage";
+import { storageUtils } from "@/utils/localStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendance = () => {
@@ -23,8 +23,8 @@ const ThesisAttendance = () => {
     loadAttendances();
   }, []);
 
-  const loadAttendances = async () => {
-    const data = await supabaseStorage.getTodayThesisAttendances();
+  const loadAttendances = () => {
+    const data = storageUtils.getTodayThesisAttendances();
     setAttendances(data);
   };
 
@@ -49,52 +49,40 @@ const ThesisAttendance = () => {
     return () => clearInterval(interval);
   }, [language]);
 
-  const handleCheckIn = async (e: React.FormEvent) => {
+  const handleCheckIn = (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkInId.trim()) return;
 
-    const member = await supabaseStorage.findMemberById(checkInId.trim());
+    const member = storageUtils.findMemberById(checkInId.trim());
     if (member) {
-      // Check if already checked in today for thesis attendance
-      const existingThesis = await supabaseStorage.checkThesisAttendanceToday(checkInId.trim());
-      if (existingThesis) {
+      // Add to thesis attendance
+      const thesisResult = storageUtils.addThesisAttendance({
+        studentId: checkInId.trim(),
+        nama: member.nama,
+        checkInTime: new Date().toISOString(),
+      });
+      
+      if (thesisResult) {
+        // Also add to check_ins (buku tamu)
+        storageUtils.addCheckIn({
+          nama: member.nama,
+          type: 'Mahasiswa Akhir',
+          data: member,
+        });
+        
+        loadAttendances();
+        setCheckInId("");
+        toast({
+          title: t("notif.checkin.success"),
+          description: `${t("notif.checkin.success")} ${member.nama}`,
+        });
+      } else {
         toast({
           title: t("notif.student.already.checkin"),
           description: `${member.nama} ${t("notif.student.already.checkin")}`,
           variant: "destructive",
         });
         setCheckInId("");
-        return;
-      }
-
-      // Add to thesis_attendance
-      const thesisResult = await supabaseStorage.addThesisAttendance({
-        studentId: checkInId.trim(),
-        nama: member.nama,
-        checkInTime: new Date().toISOString(),
-      });
-      
-      // Also add to check_ins (buku tamu) if not already checked in today
-      const existingCheckIn = await supabaseStorage.checkVisitorToday(member.member_id);
-      if (!existingCheckIn) {
-        await supabaseStorage.addCheckIn({
-          memberId: member.member_id,
-          nama: member.nama,
-          tipeKeanggotaan: member.tipe_keanggotaan,
-          jurusan: member.jurusan || '',
-          noTelepon: member.no_telepon || '',
-          alamat: member.alamat || '',
-          type: 'Mahasiswa Akhir',
-        });
-      }
-      
-      if (thesisResult) {
-        await loadAttendances();
-        setCheckInId("");
-        toast({
-          title: t("notif.checkin.success"),
-          description: `${t("notif.checkin.success")} ${member.nama}`,
-        });
       }
     } else {
       toast({
@@ -105,12 +93,12 @@ const ThesisAttendance = () => {
     }
   };
 
-  const handleCheckOut = async (e: React.FormEvent) => {
+  const handleCheckOut = (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkOutId.trim()) return;
 
     // Verify member exists in members list
-    const member = await supabaseStorage.findMemberById(checkOutId.trim());
+    const member = storageUtils.findMemberById(checkOutId.trim());
     if (!member) {
       toast({
         title: "Error",
@@ -120,9 +108,9 @@ const ThesisAttendance = () => {
       return;
     }
 
-    const success = await supabaseStorage.updateThesisCheckOut(checkOutId.trim());
+    const success = storageUtils.updateThesisCheckOut(checkOutId.trim());
     if (success) {
-      await loadAttendances();
+      loadAttendances();
       setCheckOutId("");
       toast({
         title: t("notif.checkout.success"),
@@ -137,8 +125,8 @@ const ThesisAttendance = () => {
     }
   };
 
-  const handleRefresh = async () => {
-    await loadAttendances();
+  const handleRefresh = () => {
+    loadAttendances();
     setShowData(true);
   };
 
@@ -229,11 +217,11 @@ const ThesisAttendance = () => {
                     attendances.map((att, idx) => (
                       <TableRow key={att.id}>
                         <TableCell>{idx + 1}</TableCell>
-                        <TableCell>{att.student_id}</TableCell>
-                        <TableCell>{att.student_name}</TableCell>
+                        <TableCell>{att.studentId}</TableCell>
+                        <TableCell>{att.nama}</TableCell>
                         <TableCell>
-                          {att.check_in_time
-                            ? new Date(att.check_in_time).toLocaleTimeString('id-ID', {
+                          {att.checkInTime
+                            ? new Date(att.checkInTime).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'
@@ -241,8 +229,8 @@ const ThesisAttendance = () => {
                             : '-'}
                         </TableCell>
                         <TableCell>
-                          {att.check_out_time
-                            ? new Date(att.check_out_time).toLocaleTimeString('id-ID', {
+                          {att.checkOutTime
+                            ? new Date(att.checkOutTime).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'

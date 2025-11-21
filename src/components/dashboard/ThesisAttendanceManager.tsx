@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import * as supabaseStorage from "@/utils/supabaseStorage";
+import { storageUtils } from "@/utils/localStorage";
 import { Download, Calendar, Trash2 } from "lucide-react";
 import { exportToExcel, exportThesisAttendanceToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -18,9 +18,9 @@ const ThesisAttendanceManager = () => {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    const data = await supabaseStorage.getThesisAttendances();
-    const settingsData = await supabaseStorage.getSettings();
+  const loadData = () => {
+    const data = storageUtils.getThesisAttendances();
+    const settingsData = storageUtils.getSettings();
     setAttendances(data);
     setSettings(settingsData);
   };
@@ -46,7 +46,7 @@ const ThesisAttendanceManager = () => {
 
   const filteredAttendances = attendances.filter(att => {
     if (!startDate && !endDate) return true;
-    const date = att.date || new Date(att.check_in_time).toISOString().split('T')[0];
+    const date = new Date(att.checkInTime).toISOString().split('T')[0];
     if (!date) return false;
     if (startDate && date < startDate) return false;
     if (endDate && date > endDate) return false;
@@ -55,11 +55,11 @@ const ThesisAttendanceManager = () => {
 
   const handleExportExcel = () => {
     const excelData = filteredAttendances.map(att => ({
-      'ID': att.student_id,
-      'Nama': att.student_name,
-      'Tanggal': new Date(att.check_in_time).toLocaleDateString('id-ID'),
-      'Check-in': new Date(att.check_in_time).toLocaleTimeString('id-ID'),
-      'Check-out': att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('id-ID') : '-'
+      'ID': att.studentId,
+      'Nama': att.nama,
+      'Tanggal': new Date(att.checkInTime).toLocaleDateString('id-ID'),
+      'Check-in': new Date(att.checkInTime).toLocaleTimeString('id-ID'),
+      'Check-out': att.checkOutTime ? new Date(att.checkOutTime).toLocaleTimeString('id-ID') : '-'
     }));
     exportToExcel(excelData, 'Absensi_Mahasiswa_Skripsi_Tesis');
     toast({
@@ -73,11 +73,11 @@ const ThesisAttendanceManager = () => {
       filteredAttendances,
       startDate ? new Date(startDate).toLocaleDateString('id-ID') : '',
       endDate ? new Date(endDate).toLocaleDateString('id-ID') : '',
-      settings.header_image_url,
-      settings.footer_image_url,
-      settings.header_height || 100,
-      settings.footer_height || 80,
-      settings.header_margin_top || 15
+      settings.headerImageUrl,
+      settings.footerImageUrl,
+      settings.headerHeight || 100,
+      settings.footerHeight || 80,
+      settings.headerMarginTop || 15
     );
     toast({
       title: "Berhasil!",
@@ -85,19 +85,18 @@ const ThesisAttendanceManager = () => {
     });
   };
 
-  const handleCleanupDuplicates = async () => {
-    // Since Supabase has unique constraints, duplicates shouldn't exist
-    // But we can reload data to ensure consistency
-    await loadData();
+  const handleCleanupDuplicates = () => {
+    const removed = storageUtils.removeDuplicateThesisAttendances();
+    loadData();
     toast({
       title: "Berhasil!",
-      description: "Data telah diperbarui",
+      description: `${removed} data duplikat berhasil dihapus`,
     });
   };
 
-  const handleDelete = async (id: string) => {
-    await supabaseStorage.deleteThesisAttendance(id);
-    await loadData();
+  const handleDelete = (id: string) => {
+    storageUtils.deleteThesisAttendance(id);
+    loadData();
     toast({
       title: "Berhasil!",
       description: "Data absensi berhasil dihapus",
@@ -199,21 +198,21 @@ const ThesisAttendanceManager = () => {
                 filteredAttendances.map((att, idx) => (
                   <TableRow key={att.id}>
                     <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{att.student_id}</TableCell>
-                    <TableCell>{att.student_name}</TableCell>
+                    <TableCell>{att.studentId}</TableCell>
+                    <TableCell>{att.nama}</TableCell>
                     <TableCell>
-                      {att.check_in_time 
-                        ? new Date(att.check_in_time).toLocaleDateString('id-ID')
+                      {att.checkInTime 
+                        ? new Date(att.checkInTime).toLocaleDateString('id-ID')
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      {att.check_in_time
-                        ? new Date(att.check_in_time).toLocaleTimeString('id-ID')
+                      {att.checkInTime
+                        ? new Date(att.checkInTime).toLocaleTimeString('id-ID')
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      {att.check_out_time
-                        ? new Date(att.check_out_time).toLocaleTimeString('id-ID')
+                      {att.checkOutTime
+                        ? new Date(att.checkOutTime).toLocaleTimeString('id-ID')
                         : '-'}
                     </TableCell>
                     <TableCell>
@@ -227,7 +226,7 @@ const ThesisAttendanceManager = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Hapus Data Absensi?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Apakah Anda yakin ingin menghapus data absensi {att.student_name}? Tindakan ini tidak dapat dibatalkan.
+                              Apakah Anda yakin ingin menghapus data absensi {att.nama}? Tindakan ini tidak dapat dibatalkan.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
