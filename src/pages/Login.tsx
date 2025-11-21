@@ -77,17 +77,16 @@ const Login = () => {
                 />
               </div>
               <div className="flex gap-2">
+                <Button type="submit" className="flex-1" size="lg">
+                  Login
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => navigate("/")}
                   className="flex-1"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Kembali
-                </Button>
-                <Button type="submit" className="flex-1" size="lg">
-                  Login
+                  Cancel
                 </Button>
               </div>
             </form>
