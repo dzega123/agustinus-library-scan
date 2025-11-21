@@ -18,19 +18,19 @@ const LanguageSelector = () => {
       {languages.map((lang) => (
         <Button
           key={lang.code}
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={() => setLanguage(lang.code as "id" | "en" | "zh")}
-          className={`rounded-full w-8 h-8 p-0 border transition-all hover:scale-110 ${
+          className={`rounded-full w-8 h-8 p-0 border-0 transition-all hover:scale-110 ${
             language === lang.code 
-              ? "bg-white border-accent shadow-md scale-105" 
-              : "bg-white/80 hover:bg-white border-white/60"
+              ? "bg-background/20 backdrop-blur-sm shadow-md scale-105" 
+              : "bg-transparent hover:bg-background/10 backdrop-blur-sm"
           }`}
         >
           <img 
             src={lang.flag} 
             alt={lang.name}
-            className="w-4 h-4 object-contain"
+            className="w-5 h-5 object-cover rounded-full"
           />
         </Button>
       ))}
