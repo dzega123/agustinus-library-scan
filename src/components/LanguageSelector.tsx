@@ -1,11 +1,4 @@
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const LanguageSelector = () => {
@@ -17,28 +10,24 @@ const LanguageSelector = () => {
     { code: "zh", name: "简体中文", flag: "🇨🇳" },
   ];
 
-  const currentLang = languages.find((lang) => lang.code === language);
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-full w-12 h-12 bg-white/90 hover:bg-white border-2">
-          <span className="text-2xl">{currentLang?.flag}</span>
+    <div className="flex gap-2">
+      {languages.map((lang) => (
+        <Button
+          key={lang.code}
+          variant="outline"
+          size="icon"
+          onClick={() => setLanguage(lang.code as "id" | "en" | "zh")}
+          className={`rounded-full w-12 h-12 border-2 transition-all ${
+            language === lang.code 
+              ? "bg-white border-accent scale-110" 
+              : "bg-white/70 hover:bg-white/90 border-white"
+          }`}
+        >
+          <span className="text-2xl">{lang.flag}</span>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-background border">
-        {languages.map((lang) => (
-          <DropdownMenuItem
-            key={lang.code}
-            onClick={() => setLanguage(lang.code as "id" | "en" | "zh")}
-            className={language === lang.code ? "bg-accent" : ""}
-          >
-            <span className="mr-2">{lang.flag}</span>
-            {lang.name}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      ))}
+    </div>
   );
 };
 
