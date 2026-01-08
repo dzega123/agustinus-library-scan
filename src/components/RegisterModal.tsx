@@ -6,6 +6,8 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { memberSchema, validateImageFile } from "@/lib/validations";
+import { z } from "zod";
 
 interface RegisterModalProps {
   open: boolean;
@@ -34,12 +36,14 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
     photoUrl: "",
   });
   const [photoPreview, setPhotoPreview] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize form with existing data when editing
   useEffect(() => {
     if (open && initialData) {
       setFormData(initialData);
       setPhotoPreview(initialData.photoUrl || "");
+      setErrors({});
     } else if (open && !isEditMode) {
       setFormData({
         idAnggota: "",
@@ -49,17 +53,18 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
         photoUrl: "",
       });
       setPhotoPreview("");
+      setErrors({});
     }
   }, [open, initialData, isEditMode]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 3MB)
-      if (file.size > 3 * 1024 * 1024) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
         toast({
           title: "Gagal!",
-          description: "Ukuran foto maksimal 3MB",
+          description: validation.error,
           variant: "destructive",
         });
         return;
@@ -85,7 +90,18 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.idAnggota && formData.nama && formData.tipeKeanggotaan && formData.institusi) {
+    setErrors({});
+    
+    try {
+      // Validate form data with zod
+      memberSchema.parse({
+        idAnggota: formData.idAnggota,
+        nama: formData.nama,
+        tipeKeanggotaan: formData.tipeKeanggotaan,
+        institusi: formData.institusi,
+        photoUrl: formData.photoUrl,
+      });
+      
       onRegister(formData);
       setFormData({
         idAnggota: "",
@@ -96,6 +112,21 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
       });
       setPhotoPreview("");
       onClose();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            fieldErrors[error.path[0] as string] = error.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast({
+          title: "Validasi Gagal",
+          description: "Mohon periksa kembali data yang dimasukkan",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -143,7 +174,7 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp"
                 onChange={handlePhotoChange}
                 className="hidden"
               />
@@ -158,8 +189,11 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
               onChange={(e) => setFormData({ ...formData, idAnggota: e.target.value })}
               placeholder="Masukkan kode unik kartu anggota"
               disabled={isEditMode}
-              required
+              maxLength={50}
             />
+            {errors.idAnggota && (
+              <p className="text-sm text-destructive mt-1">{errors.idAnggota}</p>
+            )}
           </div>
 
           <div>
@@ -169,8 +203,11 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
               value={formData.nama}
               onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
               placeholder="Nama lengkap"
-              required
+              maxLength={200}
             />
+            {errors.nama && (
+              <p className="text-sm text-destructive mt-1">{errors.nama}</p>
+            )}
           </div>
 
           <div>
@@ -192,6 +229,9 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
                 <SelectItem value="Alumni STTRII">Alumni STTRII</SelectItem>
               </SelectContent>
             </Select>
+            {errors.tipeKeanggotaan && (
+              <p className="text-sm text-destructive mt-1">{errors.tipeKeanggotaan}</p>
+            )}
           </div>
 
           <div>
@@ -201,8 +241,11 @@ const RegisterModal = ({ open, onClose, onRegister, initialData, isEditMode = fa
               value={formData.institusi}
               onChange={(e) => setFormData({ ...formData, institusi: e.target.value })}
               placeholder="Nama institusi"
-              required
+              maxLength={200}
             />
+            {errors.institusi && (
+              <p className="text-sm text-destructive mt-1">{errors.institusi}</p>
+            )}
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
