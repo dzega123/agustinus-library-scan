@@ -3,18 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Image, Lock, FileText } from "lucide-react";
+import { Settings, Image, FileText, LogOut } from "lucide-react";
 import * as supabaseStorage from "@/utils/supabaseStorage";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const SettingsPanel = () => {
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<any>({});
   const [libraryName, setLibraryName] = useState("");
   const [footerText, setFooterText] = useState("");
-  const [username, setUsername] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [headerImageFile, setHeaderImageFile] = useState<File | null>(null);
@@ -33,7 +34,6 @@ const SettingsPanel = () => {
       setSettings(data);
       setLibraryName(data.library_name || "Perpustakaan Agustinus");
       setFooterText(data.footer_text || "Powered by INLISLite Perpusnas");
-      setUsername(data.admin_username || "Admin");
       setHeaderHeight(data.header_height || 100);
       setFooterHeight(data.footer_height || 80);
       setHeaderMarginTop(data.header_margin_top || 15);
@@ -89,33 +89,13 @@ const SettingsPanel = () => {
     });
   };
 
-  const handleSecurityUpdate = async () => {
-    if (newPassword && newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Password tidak cocok",
-        variant: "destructive",
-        duration: 2000,
-      });
-      return;
-    }
-
-    const updates: any = { admin_username: username };
-    if (newPassword) {
-      updates.admin_password = newPassword;
-    }
-
-    await supabaseStorage.updateSettings(updates);
-    await loadSettings();
-    
+  const handleLogout = async () => {
+    await signOut();
     toast({
-      title: "Berhasil!",
-      description: "Pengaturan keamanan berhasil diperbarui",
-      duration: 2000,
+      title: "Logout berhasil",
+      description: "Anda telah keluar dari sistem",
     });
-    
-    setNewPassword("");
-    setConfirmPassword("");
+    navigate("/");
   };
 
   const handleFooterSave = async () => {
@@ -163,6 +143,27 @@ const SettingsPanel = () => {
         <p className="text-muted-foreground">Konfigurasi sistem perpustakaan</p>
       </div>
 
+      {/* Account Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LogOut className="w-5 h-5" />
+            Akun Admin
+          </CardTitle>
+          <CardDescription>Informasi akun yang sedang login</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <p className="text-sm text-muted-foreground">{user?.email || "Tidak diketahui"}</p>
+          </div>
+          <Button variant="destructive" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Library Settings */}
       <Card>
         <CardHeader>
@@ -178,6 +179,7 @@ const SettingsPanel = () => {
             <Input 
               value={libraryName} 
               onChange={(e) => setLibraryName(e.target.value)}
+              maxLength={200}
             />
           </div>
           <div className="space-y-2">
@@ -214,47 +216,6 @@ const SettingsPanel = () => {
         </CardContent>
       </Card>
 
-      {/* Admin Login Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Keamanan Admin
-          </CardTitle>
-          <CardDescription>Kelola username dan password admin</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Username</Label>
-            <Input 
-              type="text" 
-              placeholder="Username admin" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Password Baru</Label>
-            <Input 
-              type="password" 
-              placeholder="Masukkan password baru" 
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Konfirmasi Password</Label>
-            <Input 
-              type="password" 
-              placeholder="Konfirmasi password baru" 
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleSecurityUpdate}>Update Keamanan</Button>
-        </CardContent>
-      </Card>
-
       {/* Footer Settings */}
       <Card>
         <CardHeader>
@@ -267,6 +228,7 @@ const SettingsPanel = () => {
             <Input 
               value={footerText}
               onChange={(e) => setFooterText(e.target.value)}
+              maxLength={500}
             />
           </div>
           <Button onClick={handleFooterSave}>Simpan Footer</Button>
@@ -363,4 +325,3 @@ const SettingsPanel = () => {
 };
 
 export default SettingsPanel;
-

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Textarea } from "./ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { nonMemberSchema } from "@/lib/validations";
+import { z } from "zod";
 
 interface NonAnggotaTabProps {
   onRegister: (data: NonAnggotaData) => void;
@@ -19,6 +21,7 @@ export interface NonAnggotaData {
 }
 
 const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState<NonAnggotaData>({
     nama: "",
     pekerjaan: "",
@@ -27,10 +30,22 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
     alamat: "",
     tujuanKunjungan: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.nama && formData.pekerjaan && formData.pendidikan && formData.jenisKelamin) {
+    setErrors({});
+    
+    try {
+      nonMemberSchema.parse({
+        nama: formData.nama,
+        pekerjaan: formData.pekerjaan,
+        pendidikan: formData.pendidikan,
+        jenisKelamin: formData.jenisKelamin,
+        alamat: formData.alamat || undefined,
+        tujuanKunjungan: formData.tujuanKunjungan || undefined,
+      });
+      
       onRegister(formData);
       setFormData({
         nama: "",
@@ -40,6 +55,21 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
         alamat: "",
         tujuanKunjungan: "",
       });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            fieldErrors[error.path[0] as string] = error.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast({
+          title: "Validasi Gagal",
+          description: "Mohon periksa kembali data yang dimasukkan",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -52,8 +82,11 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
             id="nama"
             value={formData.nama}
             onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-            required
+            maxLength={200}
           />
+          {errors.nama && (
+            <p className="text-sm text-destructive mt-1">{errors.nama}</p>
+          )}
         </div>
 
         <div>
@@ -89,12 +122,15 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
               </div>
             ))}
           </div>
+          {errors.pekerjaan && (
+            <p className="text-sm text-destructive mt-1">{errors.pekerjaan}</p>
+          )}
         </div>
 
         <div>
           <Label className="mb-3 block">Pendidikan Terakhir</Label>
           <div className="grid grid-cols-3 gap-4">
-            {["SD", "D1", "D2", "SMP", "D2", "D3", "SMA", "S1", "S2", "S3"].map((edu) => (
+            {["SD", "D1", "D2", "SMP", "D3", "SMA", "S1", "S2", "S3"].map((edu) => (
               <div key={edu} className="flex items-center space-x-2">
                 <input
                   type="radio"
@@ -111,6 +147,9 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
               </div>
             ))}
           </div>
+          {errors.pendidikan && (
+            <p className="text-sm text-destructive mt-1">{errors.pendidikan}</p>
+          )}
         </div>
 
         <div>
@@ -133,6 +172,9 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
               </div>
             ))}
           </div>
+          {errors.jenisKelamin && (
+            <p className="text-sm text-destructive mt-1">{errors.jenisKelamin}</p>
+          )}
         </div>
 
         <div>
@@ -142,7 +184,11 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
             value={formData.alamat}
             onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
             rows={3}
+            maxLength={500}
           />
+          {errors.alamat && (
+            <p className="text-sm text-destructive mt-1">{errors.alamat}</p>
+          )}
         </div>
 
         <div>
@@ -153,7 +199,11 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
             onChange={(e) => setFormData({ ...formData, tujuanKunjungan: e.target.value })}
             rows={2}
             placeholder="Contoh: Membaca buku, mencari referensi, dll."
+            maxLength={500}
           />
+          {errors.tujuanKunjungan && (
+            <p className="text-sm text-destructive mt-1">{errors.tujuanKunjungan}</p>
+          )}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -163,7 +213,7 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
+            onClick={() => {
               setFormData({
                 nama: "",
                 pekerjaan: "",
@@ -171,8 +221,9 @@ const NonAnggotaTab = ({ onRegister }: NonAnggotaTabProps) => {
                 jenisKelamin: "",
                 alamat: "",
                 tujuanKunjungan: "",
-              })
-            }
+              });
+              setErrors({});
+            }}
           >
             Ulangi
           </Button>

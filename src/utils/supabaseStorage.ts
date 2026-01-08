@@ -46,8 +46,6 @@ export interface LibrarySettings {
   header_height?: number;
   footer_height?: number;
   header_margin_top?: number;
-  admin_username: string;
-  admin_password: string;
 }
 
 // Members operations
@@ -351,8 +349,6 @@ export const getSettings = async (): Promise<LibrarySettings> => {
   
   return data || {
     library_name: 'Perpustakaan Agustinus STTRII',
-    admin_username: 'Admin',
-    admin_password: 'admin123'
   };
 };
 

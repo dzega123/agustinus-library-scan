@@ -3,6 +3,9 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { groupVisitorSchema } from "@/lib/validations";
+import { z } from "zod";
 
 interface RombonganTabProps {
   onRegister: (data: RombonganData) => void;
@@ -23,6 +26,7 @@ export interface RombonganData {
 }
 
 const RombonganTab = ({ onRegister }: RombonganTabProps) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState<RombonganData>({
     namaKetuaRombongan: "",
     nomorTeleponKetua: "",
@@ -36,14 +40,27 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
     pendidikan: {},
     tujuanKunjungan: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      formData.namaKetuaRombongan &&
-      formData.namaInstansi &&
-      formData.jumlahPersonil > 0
-    ) {
+    setErrors({});
+    
+    try {
+      groupVisitorSchema.parse({
+        namaKetuaRombongan: formData.namaKetuaRombongan,
+        nomorTeleponKetua: formData.nomorTeleponKetua || undefined,
+        namaInstansi: formData.namaInstansi,
+        alamatInstansi: formData.alamatInstansi || undefined,
+        nomorTeleponInstansi: formData.nomorTeleponInstansi || undefined,
+        emailInstansi: formData.emailInstansi || undefined,
+        jumlahPersonil: formData.jumlahPersonil,
+        jenisKelamin: formData.jenisKelamin,
+        pekerjaan: formData.pekerjaan,
+        pendidikan: formData.pendidikan,
+        tujuanKunjungan: formData.tujuanKunjungan || undefined,
+      });
+      
       onRegister(formData);
       setFormData({
         namaKetuaRombongan: "",
@@ -56,16 +73,33 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
         jenisKelamin: {},
         pekerjaan: {},
         pendidikan: {},
+        tujuanKunjungan: "",
       });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            fieldErrors[error.path[0] as string] = error.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast({
+          title: "Validasi Gagal",
+          description: "Mohon periksa kembali data yang dimasukkan",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleCountChange = (category: "jenisKelamin" | "pekerjaan" | "pendidikan", key: string, value: string) => {
+    const numValue = Math.max(0, Math.min(10000, parseInt(value) || 0));
     setFormData({
       ...formData,
       [category]: {
         ...formData[category],
-        [key]: parseInt(value) || 0,
+        [key]: numValue,
       },
     });
   };
@@ -82,8 +116,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, namaKetuaRombongan: e.target.value })
               }
-              required
+              maxLength={200}
             />
+            {errors.namaKetuaRombongan && (
+              <p className="text-sm text-destructive mt-1">{errors.namaKetuaRombongan}</p>
+            )}
           </div>
 
           <div>
@@ -94,7 +131,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, nomorTeleponKetua: e.target.value })
               }
+              maxLength={20}
             />
+            {errors.nomorTeleponKetua && (
+              <p className="text-sm text-destructive mt-1">{errors.nomorTeleponKetua}</p>
+            )}
           </div>
 
           <div>
@@ -105,8 +146,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, namaInstansi: e.target.value })
               }
-              required
+              maxLength={200}
             />
+            {errors.namaInstansi && (
+              <p className="text-sm text-destructive mt-1">{errors.namaInstansi}</p>
+            )}
           </div>
 
           <div>
@@ -117,7 +161,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, nomorTeleponInstansi: e.target.value })
               }
+              maxLength={20}
             />
+            {errors.nomorTeleponInstansi && (
+              <p className="text-sm text-destructive mt-1">{errors.nomorTeleponInstansi}</p>
+            )}
           </div>
         </div>
 
@@ -130,7 +178,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
               setFormData({ ...formData, alamatInstansi: e.target.value })
             }
             rows={2}
+            maxLength={500}
           />
+          {errors.alamatInstansi && (
+            <p className="text-sm text-destructive mt-1">{errors.alamatInstansi}</p>
+          )}
         </div>
 
         <div>
@@ -142,7 +194,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
             onChange={(e) =>
               setFormData({ ...formData, emailInstansi: e.target.value })
             }
+            maxLength={255}
           />
+          {errors.emailInstansi && (
+            <p className="text-sm text-destructive mt-1">{errors.emailInstansi}</p>
+          )}
         </div>
 
         <div>
@@ -150,13 +206,16 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
           <Input
             id="jumlahPersonil"
             type="number"
-            min="0"
+            min="1"
+            max="10000"
             value={formData.jumlahPersonil || ""}
             onChange={(e) =>
-              setFormData({ ...formData, jumlahPersonil: parseInt(e.target.value) || 0 })
+              setFormData({ ...formData, jumlahPersonil: Math.max(0, Math.min(10000, parseInt(e.target.value) || 0)) })
             }
-            required
           />
+          {errors.jumlahPersonil && (
+            <p className="text-sm text-destructive mt-1">{errors.jumlahPersonil}</p>
+          )}
         </div>
 
         <div>
@@ -167,6 +226,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
                 <Input
                   type="number"
                   min="0"
+                  max="10000"
                   placeholder="0"
                   className="w-20"
                   value={formData.jenisKelamin[item] || ""}
@@ -186,6 +246,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
                 <Input
                   type="number"
                   min="0"
+                  max="10000"
                   placeholder="0"
                   className="w-20"
                   value={formData.pekerjaan[item] || ""}
@@ -205,6 +266,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
                 <Input
                   type="number"
                   min="0"
+                  max="10000"
                   placeholder="0"
                   className="w-20"
                   value={formData.pendidikan[item] || ""}
@@ -226,7 +288,11 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
             }
             rows={2}
             placeholder="Contoh: Kunjungan edukasi, studi banding, dll."
+            maxLength={500}
           />
+          {errors.tujuanKunjungan && (
+            <p className="text-sm text-destructive mt-1">{errors.tujuanKunjungan}</p>
+          )}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -236,7 +302,7 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
+            onClick={() => {
               setFormData({
                 namaKetuaRombongan: "",
                 nomorTeleponKetua: "",
@@ -249,8 +315,9 @@ const RombonganTab = ({ onRegister }: RombonganTabProps) => {
                 pekerjaan: {},
                 pendidikan: {},
                 tujuanKunjungan: "",
-              })
-            }
+              });
+              setErrors({});
+            }}
           >
             Ulangi
           </Button>
