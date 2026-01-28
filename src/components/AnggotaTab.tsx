@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Check } from "lucide-react";
-import { storageUtils } from "@/utils/localStorage";
+import { Check, Loader2 } from "lucide-react";
+import * as supabaseStorage from "@/utils/supabaseStorage";
+import type { Member } from "@/utils/supabaseStorage";
 
 interface AnggotaTabProps {
   onCheckIn: (memberId: string) => void;
@@ -10,10 +11,27 @@ interface AnggotaTabProps {
 
 const AnggotaTab = ({ onCheckIn }: AnggotaTabProps) => {
   const [searchInput, setSearchInput] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<Member[]>([]);
+  const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Load all members on mount
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        const members = await supabaseStorage.getMembers();
+        setAllMembers(members);
+      } catch (error) {
+        console.error("Error loading members:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMembers();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,11 +51,10 @@ const AnggotaTab = ({ onCheckIn }: AnggotaTabProps) => {
 
   useEffect(() => {
     if (searchInput.trim().length > 0) {
-      const members = storageUtils.getMembers();
-      const filtered = members.filter(
+      const filtered = allMembers.filter(
         (member) =>
           member.nama.toLowerCase().includes(searchInput.toLowerCase()) ||
-          member.idAnggota.toLowerCase().includes(searchInput.toLowerCase())
+          member.member_id.toLowerCase().includes(searchInput.toLowerCase())
       );
       setSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
@@ -45,7 +62,7 @@ const AnggotaTab = ({ onCheckIn }: AnggotaTabProps) => {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchInput]);
+  }, [searchInput, allMembers]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,12 +91,17 @@ const AnggotaTab = ({ onCheckIn }: AnggotaTabProps) => {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="No. anggota atau nama pengunjung"
+            placeholder={loading ? "Memuat data..." : "No. anggota atau nama pengunjung"}
             className="flex-1"
             autoFocus
+            disabled={loading}
           />
-          <Button type="submit" size="icon" className="shrink-0">
-            <Check className="w-5 h-5" />
+          <Button type="submit" size="icon" className="shrink-0" disabled={loading}>
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Check className="w-5 h-5" />
+            )}
           </Button>
         </div>
 
@@ -90,14 +112,14 @@ const AnggotaTab = ({ onCheckIn }: AnggotaTabProps) => {
           >
             {suggestions.map((member) => (
               <button
-                key={member.idAnggota}
+                key={member.member_id}
                 type="button"
-                onClick={() => handleSelectMember(member.idAnggota)}
+                onClick={() => handleSelectMember(member.member_id)}
                 className="w-full px-4 py-3 text-left hover:bg-accent transition-colors border-b border-border last:border-b-0"
               >
                 <div className="font-medium text-foreground">{member.nama}</div>
                 <div className="text-sm text-muted-foreground">
-                  {member.idAnggota} • {member.tipeKeanggotaan}
+                  {member.member_id} • {member.tipe_keanggotaan}
                 </div>
               </button>
             ))}

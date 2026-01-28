@@ -1,11 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, TrendingUp } from "lucide-react";
-import { storageUtils } from "@/utils/localStorage";
+import { Users, UserCheck, TrendingUp, Loader2 } from "lucide-react";
+import { useDashboardStats } from "@/hooks/useSupabaseData";
 
 const DashboardHome = () => {
-  const members = storageUtils.getMembers();
-  const todayVisitors = storageUtils.getTodayCheckIns();
-  const allVisitors = storageUtils.getCheckIns();
+  const { stats, loading } = useDashboardStats();
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -22,7 +28,7 @@ const DashboardHome = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{members.length}</div>
+            <div className="text-2xl font-bold">{stats.totalMembers}</div>
             <p className="text-xs text-muted-foreground">Anggota terdaftar</p>
           </CardContent>
         </Card>
@@ -33,7 +39,7 @@ const DashboardHome = () => {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayVisitors.length}</div>
+            <div className="text-2xl font-bold">{stats.todayVisitors}</div>
             <p className="text-xs text-muted-foreground">Check-in hari ini</p>
           </CardContent>
         </Card>
@@ -44,7 +50,7 @@ const DashboardHome = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{allVisitors.length}</div>
+            <div className="text-2xl font-bold">{stats.totalVisitors}</div>
             <p className="text-xs text-muted-foreground">Total check-in</p>
           </CardContent>
         </Card>

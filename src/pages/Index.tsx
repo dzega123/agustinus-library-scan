@@ -1,8 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import WelcomeBanner from "@/components/WelcomeBanner";
@@ -14,13 +11,12 @@ import TodayVisitorsTab from "@/components/TodayVisitorsTab";
 import FloatingRegisterButton from "@/components/FloatingRegisterButton";
 import RegisterModal, { RegisterData } from "@/components/RegisterModal";
 import SuccessNotification from "@/components/SuccessNotification";
-import { storageUtils } from "@/utils/localStorage";
+import * as supabaseStorage from "@/utils/supabaseStorage";
 
 const Index = () => {
-  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [currentDate, setCurrentDate] = useState("");
-  const [visitors, setVisitors] = useState(() => storageUtils.getTodayCheckIns());
+  const [visitors, setVisitors] = useState<supabaseStorage.CheckInData[]>([]);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [notification, setNotification] = useState({ 
     show: false, 
@@ -28,6 +24,19 @@ const Index = () => {
     memberName: "",
     memberPhoto: "",
   });
+
+  const loadTodayVisitors = useCallback(async () => {
+    try {
+      const data = await supabaseStorage.getTodayCheckIns();
+      setVisitors(data);
+    } catch (error) {
+      console.error("Error loading visitors:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTodayVisitors();
+  }, [loadTodayVisitors]);
 
   useEffect(() => {
     const updateDate = () => {
@@ -60,72 +69,120 @@ const Index = () => {
     });
   };
 
-  const handleMemberCheckIn = (memberId: string) => {
-    const member = storageUtils.findMemberById(memberId);
-    if (member) {
-      const checkIn = storageUtils.addCheckIn({
-        nama: member.nama,
-        type: member.tipeKeanggotaan,
-        data: member,
+  const handleMemberCheckIn = async (memberId: string) => {
+    try {
+      const member = await supabaseStorage.findMemberById(memberId);
+      if (member) {
+        const checkIn = await supabaseStorage.addCheckIn({
+          member_id: member.member_id,
+          nama: member.nama,
+          type: member.tipe_keanggotaan,
+          tipe_keanggotaan: member.tipe_keanggotaan,
+          jurusan: member.jurusan,
+          no_telepon: member.no_telepon,
+        });
+        
+        if (checkIn) {
+          await loadTodayVisitors();
+          showSuccess(`${t("notif.welcome")}, ${member.nama}!`, member.nama);
+        } else {
+          showSuccess(t("notif.already.checkin"));
+        }
+      } else {
+        showSuccess(t("notif.notfound"));
+      }
+    } catch (error) {
+      console.error("Error during check-in:", error);
+      showSuccess("Terjadi kesalahan saat check-in");
+    }
+  };
+
+  const handleNonMemberRegister = async (data: NonAnggotaData) => {
+    try {
+      const checkIn = await supabaseStorage.addCheckIn({
+        member_id: `non-${Date.now()}`,
+        nama: data.nama,
+        type: "Non Anggota",
+        tipe_keanggotaan: "Non Anggota",
+        jurusan: data.pekerjaan,
+        alamat: data.alamat,
       });
       
       if (checkIn) {
-        setVisitors(storageUtils.getTodayCheckIns());
-        showSuccess(`${t("notif.welcome")}, ${member.nama}!`, member.nama, member.photoUrl);
+        await loadTodayVisitors();
+        showSuccess(`${t("notif.register.success")}, ${data.nama}!`, data.nama);
       } else {
         showSuccess(t("notif.already.checkin"));
       }
-    } else {
-      showSuccess(t("notif.notfound"));
+    } catch (error) {
+      console.error("Error during registration:", error);
+      showSuccess("Terjadi kesalahan saat registrasi");
     }
   };
 
-  const handleNonMemberRegister = (data: NonAnggotaData) => {
-    const checkIn = storageUtils.addCheckIn({
-      nama: data.nama,
-      type: "Non Anggota",
-      data,
-    });
-    
-    if (checkIn) {
-      setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`${t("notif.register.success")}, ${data.nama}!`, data.nama);
-    } else {
-      showSuccess(t("notif.already.checkin"));
+  const handleGroupRegister = async (data: RombonganData) => {
+    try {
+      const checkIn = await supabaseStorage.addCheckIn({
+        member_id: `group-${Date.now()}`,
+        nama: data.namaInstansi,
+        type: "Rombongan",
+        tipe_keanggotaan: "Rombongan",
+        jurusan: `${data.jumlahPersonil} orang`,
+        alamat: data.alamatInstansi,
+      });
+      
+      if (checkIn) {
+        await loadTodayVisitors();
+        showSuccess(t("notif.group.success").replace("{name}", data.namaInstansi));
+      } else {
+        showSuccess(t("notif.group.already"));
+      }
+    } catch (error) {
+      console.error("Error during group registration:", error);
+      showSuccess("Terjadi kesalahan saat registrasi");
     }
   };
 
-  const handleGroupRegister = (data: RombonganData) => {
-    const checkIn = storageUtils.addCheckIn({
-      nama: data.namaInstansi,
-      type: "Rombongan",
-      data,
-    });
-    
-    if (checkIn) {
-      setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(t("notif.group.success").replace("{name}", data.namaInstansi));
-    } else {
-      showSuccess(t("notif.group.already"));
+  const handleNewMemberRegister = async (data: RegisterData) => {
+    try {
+      // Add member first
+      await supabaseStorage.addMember({
+        member_id: data.idAnggota,
+        nama: data.nama,
+        tipe_keanggotaan: data.tipeKeanggotaan,
+        jurusan: data.institusi,
+      });
+      
+      // Then check in
+      const checkIn = await supabaseStorage.addCheckIn({
+        member_id: data.idAnggota,
+        nama: data.nama,
+        type: data.tipeKeanggotaan,
+        tipe_keanggotaan: data.tipeKeanggotaan,
+        jurusan: data.institusi,
+      });
+      
+      if (checkIn) {
+        await loadTodayVisitors();
+        showSuccess(`${t("notif.member.success")}, ${data.nama}!`, data.nama, data.photoUrl);
+      } else {
+        await loadTodayVisitors();
+        showSuccess(t("notif.member.already"));
+      }
+    } catch (error) {
+      console.error("Error during new member registration:", error);
+      showSuccess("Terjadi kesalahan saat registrasi");
     }
   };
 
-  const handleNewMemberRegister = (data: RegisterData) => {
-    storageUtils.addMember(data);
-    const checkIn = storageUtils.addCheckIn({
-      nama: data.nama,
-      type: data.tipeKeanggotaan,
-      data,
-    });
-    
-    if (checkIn) {
-      setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(`${t("notif.member.success")}, ${data.nama}!`, data.nama, data.photoUrl);
-    } else {
-      setVisitors(storageUtils.getTodayCheckIns());
-      showSuccess(t("notif.member.already"));
-    }
-  };
+  // Transform visitors for TodayVisitorsTab format
+  const transformedVisitors = visitors.map(v => ({
+    id: v.id || "",
+    nama: v.nama,
+    type: v.type,
+    timestamp: v.check_in_time || v.date || "",
+    tujuanKunjungan: v.jurusan,
+  }));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -154,7 +211,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="today">
-            <TodayVisitorsTab visitors={visitors} />
+            <TodayVisitorsTab visitors={transformedVisitors} />
           </TabsContent>
         </Tabs>
       </div>
