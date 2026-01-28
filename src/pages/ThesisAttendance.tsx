@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { storageUtils } from "@/utils/localStorage";
+import * as supabaseStorage from "@/utils/supabaseStorage";
 import { useToast } from "@/hooks/use-toast";
 
 const ThesisAttendance = () => {
@@ -16,17 +16,25 @@ const ThesisAttendance = () => {
   const [checkInId, setCheckInId] = useState("");
   const [checkOutId, setCheckOutId] = useState("");
   const [showData, setShowData] = useState(false);
-  const [attendances, setAttendances] = useState<any[]>([]);
+  const [attendances, setAttendances] = useState<supabaseStorage.ThesisAttendance[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const loadAttendances = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await supabaseStorage.getTodayThesisAttendances();
+      setAttendances(data);
+    } catch (error) {
+      console.error("Error loading attendances:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadAttendances();
-  }, []);
-
-  const loadAttendances = () => {
-    const data = storageUtils.getTodayThesisAttendances();
-    setAttendances(data);
-  };
+  }, [loadAttendances]);
 
   useEffect(() => {
     const updateDate = () => {
@@ -49,84 +57,109 @@ const ThesisAttendance = () => {
     return () => clearInterval(interval);
   }, [language]);
 
-  const handleCheckIn = (e: React.FormEvent) => {
+  const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkInId.trim()) return;
 
-    const member = storageUtils.findMemberById(checkInId.trim());
-    if (member) {
-      // Add to thesis attendance
-      const thesisResult = storageUtils.addThesisAttendance({
-        studentId: checkInId.trim(),
-        nama: member.nama,
-        checkInTime: new Date().toISOString(),
-      });
-      
-      if (thesisResult) {
-        // Also add to check_ins (buku tamu)
-        storageUtils.addCheckIn({
-          nama: member.nama,
-          type: 'Mahasiswa Akhir',
-          data: member,
-        });
+    try {
+      const member = await supabaseStorage.findMemberById(checkInId.trim());
+      if (member) {
+        // Add to thesis attendance
+        const thesisResult = await supabaseStorage.addOrUpdateThesisAttendance(
+          checkInId.trim(),
+          member.nama,
+          'checkin'
+        );
         
-        loadAttendances();
-        setCheckInId("");
-        toast({
-          title: t("notif.checkin.success"),
-          description: `${t("notif.checkin.success")} ${member.nama}`,
-        });
+        if (thesisResult) {
+          // Also add to check_ins (buku tamu)
+          await supabaseStorage.addCheckIn({
+            member_id: member.member_id,
+            nama: member.nama,
+            type: 'Mahasiswa Akhir',
+            tipe_keanggotaan: 'Mahasiswa Akhir',
+            jurusan: member.jurusan,
+          });
+          
+          await loadAttendances();
+          setCheckInId("");
+          toast({
+            title: t("notif.checkin.success"),
+            description: `${t("notif.checkin.success")} ${member.nama}`,
+          });
+        } else {
+          toast({
+            title: t("notif.student.already.checkin"),
+            description: `${member.nama} ${t("notif.student.already.checkin")}`,
+            variant: "destructive",
+          });
+          setCheckInId("");
+        }
       } else {
         toast({
-          title: t("notif.student.already.checkin"),
-          description: `${member.nama} ${t("notif.student.already.checkin")}`,
+          title: "Error",
+          description: t("notif.student.notfound"),
           variant: "destructive",
         });
-        setCheckInId("");
       }
-    } else {
+    } catch (error) {
+      console.error("Error during check-in:", error);
       toast({
         title: "Error",
-        description: t("notif.student.notfound"),
+        description: "Terjadi kesalahan saat check-in",
         variant: "destructive",
       });
     }
   };
 
-  const handleCheckOut = (e: React.FormEvent) => {
+  const handleCheckOut = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkOutId.trim()) return;
 
-    // Verify member exists in members list
-    const member = storageUtils.findMemberById(checkOutId.trim());
-    if (!member) {
-      toast({
-        title: "Error",
-        description: t("notif.student.notfound"),
-        variant: "destructive",
-      });
-      return;
-    }
+    try {
+      // Verify member exists in members list
+      const member = await supabaseStorage.findMemberById(checkOutId.trim());
+      if (!member) {
+        toast({
+          title: "Error",
+          description: t("notif.student.notfound"),
+          variant: "destructive",
+        });
+        return;
+      }
 
-    const success = storageUtils.updateThesisCheckOut(checkOutId.trim());
-    if (success) {
-      loadAttendances();
-      setCheckOutId("");
-      toast({
-        title: t("notif.checkout.success"),
-        description: `${t("notif.checkout.success")} ${member.nama}`,
-      });
-    } else {
+      const result = await supabaseStorage.addOrUpdateThesisAttendance(
+        checkOutId.trim(),
+        member.nama,
+        'checkout'
+      );
+      
+      if (result) {
+        await loadAttendances();
+        setCheckOutId("");
+        toast({
+          title: t("notif.checkout.success"),
+          description: `${t("notif.checkout.success")} ${member.nama}`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: t("notif.checkout.notfound"),
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error during check-out:", error);
       toast({
         title: "Error",
-        description: t("notif.checkout.notfound"),
+        description: error.message || "Terjadi kesalahan saat check-out",
         variant: "destructive",
       });
     }
   };
 
-  const handleRefresh = () => {
-    loadAttendances();
+  const handleRefresh = async () => {
+    await loadAttendances();
     setShowData(true);
   };
 
@@ -184,8 +217,12 @@ const ThesisAttendance = () => {
         </div>
 
         <div className="text-center mb-4">
-          <Button onClick={handleRefresh} variant="outline" size="lg">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button onClick={handleRefresh} variant="outline" size="lg" disabled={loading}>
+            {loading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
             {t("thesis.refresh")}
           </Button>
         </div>
@@ -217,11 +254,11 @@ const ThesisAttendance = () => {
                     attendances.map((att, idx) => (
                       <TableRow key={att.id}>
                         <TableCell>{idx + 1}</TableCell>
-                        <TableCell>{att.studentId}</TableCell>
-                        <TableCell>{att.nama}</TableCell>
+                        <TableCell>{att.student_id}</TableCell>
+                        <TableCell>{att.student_name}</TableCell>
                         <TableCell>
-                          {att.checkInTime
-                            ? new Date(att.checkInTime).toLocaleTimeString('id-ID', {
+                          {att.check_in_time
+                            ? new Date(att.check_in_time).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'
@@ -229,8 +266,8 @@ const ThesisAttendance = () => {
                             : '-'}
                         </TableCell>
                         <TableCell>
-                          {att.checkOutTime
-                            ? new Date(att.checkOutTime).toLocaleTimeString('id-ID', {
+                          {att.check_out_time
+                            ? new Date(att.check_out_time).toLocaleTimeString('id-ID', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
-import { storageUtils } from "@/utils/localStorage";
+import { BarChart3, TrendingUp, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,6 +10,7 @@ const Statistics = () => {
   const [weekData, setWeekData] = useState<any[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getMonday(new Date()));
   const [totalVisitors, setTotalVisitors] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   function getMonday(date: Date) {
     const d = new Date(date);
@@ -18,27 +19,63 @@ const Statistics = () => {
     return new Date(d.setDate(diff));
   }
 
-  useEffect(() => {
-    loadWeekData();
+  const loadWeekData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const weekStart = new Date(currentWeekStart);
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999);
+
+      const startStr = weekStart.toISOString().split('T')[0];
+      const endStr = weekEnd.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('check_ins')
+        .select('date, check_in_time')
+        .gte('date', startStr)
+        .lte('date', endStr);
+
+      if (error) throw error;
+
+      const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+      const dayCounts: { [key: string]: number } = {};
+
+      // Initialize all days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        dayCounts[dateStr] = 0;
+      }
+
+      // Count check-ins per day
+      data?.forEach((item) => {
+        if (item.date && dayCounts[item.date] !== undefined) {
+          dayCounts[item.date]++;
+        }
+      });
+
+      const chartData = Object.entries(dayCounts).map(([date, count], index) => ({
+        name: dayNames[index],
+        date,
+        kunjungan: count,
+      }));
+
+      setWeekData(chartData);
+      setTotalVisitors(chartData.reduce((sum, item) => sum + item.kunjungan, 0));
+    } catch (error) {
+      console.error("Error loading week data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [currentWeekStart]);
 
-  const loadWeekData = () => {
-    const weekStart = new Date(currentWeekStart);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    const weeklyData = storageUtils.getWeeklyCheckIns(weekStart);
-    
-    const dayNames = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    
-    const chartData = weeklyData.map((item, index) => ({
-      name: dayNames[index],
-      date: item.date,
-      kunjungan: item.count,
-    }));
-
-    setWeekData(chartData);
-    setTotalVisitors(weeklyData.reduce((sum, item) => sum + item.count, 0));
-  };
+  useEffect(() => {
+    loadWeekData();
+  }, [loadWeekData]);
 
   const goToPreviousWeek = () => {
     const newDate = new Date(currentWeekStart);
@@ -63,6 +100,14 @@ const Statistics = () => {
     
     return `${start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

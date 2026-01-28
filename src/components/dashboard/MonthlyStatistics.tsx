@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
-import { storageUtils } from "@/utils/localStorage";
+import { BarChart3, Calendar, Loader2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,28 +10,57 @@ const MonthlyStatistics = () => {
   const [yearData, setYearData] = useState<any[]>([]);
   const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   const [totalVisitors, setTotalVisitors] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const loadYearData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const startDate = `${currentYear}-01-01`;
+      const endDate = `${currentYear}-12-31`;
+
+      const { data, error } = await supabase
+        .from('check_ins')
+        .select('date')
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      if (error) throw error;
+
+      const monthNames = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
+      ];
+
+      const monthlyCounts: { [key: number]: number } = {};
+      for (let i = 0; i < 12; i++) {
+        monthlyCounts[i] = 0;
+      }
+
+      data?.forEach((item) => {
+        if (item.date) {
+          const month = new Date(item.date).getMonth();
+          monthlyCounts[month]++;
+        }
+      });
+
+      const chartData = Object.entries(monthlyCounts).map(([month, count]) => ({
+        name: monthNames[parseInt(month)],
+        month: parseInt(month) + 1,
+        kunjungan: count,
+      }));
+
+      setYearData(chartData);
+      setTotalVisitors(chartData.reduce((sum, item) => sum + item.kunjungan, 0));
+    } catch (error) {
+      console.error("Error loading year data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentYear]);
 
   useEffect(() => {
     loadYearData();
-  }, [currentYear]);
-
-  const loadYearData = () => {
-    const monthlyData = storageUtils.getMonthlyCheckIns(currentYear);
-    
-    const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
-
-    const chartData = monthlyData.map((item) => ({
-      name: monthNames[item.month],
-      month: item.month + 1,
-      kunjungan: item.count,
-    }));
-
-    setYearData(chartData);
-    setTotalVisitors(monthlyData.reduce((sum, item) => sum + item.count, 0));
-  };
+  }, [loadYearData]);
 
   const goToPreviousYear = () => {
     setCurrentYear(currentYear - 1);
@@ -44,6 +73,14 @@ const MonthlyStatistics = () => {
   const goToCurrentYear = () => {
     setCurrentYear(new Date().getFullYear());
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
